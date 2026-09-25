@@ -51,6 +51,11 @@
   .pf-survival-value{position:relative;display:inline-block;font-size:1em;font-weight:950;letter-spacing:-.055em;
     -webkit-text-stroke:1px rgba(0,0,0,.60);transform-origin:50% 60%}
   .pf-survival-value i{margin-left:.04em;font-size:.58em;font-style:italic;vertical-align:.12em;letter-spacing:0}
+  .pf-survival-delta{display:inline-block;margin-left:.30em;font-size:.30em;font-weight:400;letter-spacing:.04em;
+    color:#ff8a32;text-shadow:0 2px 4px rgba(0,0,0,.9);animation:dsub 1200ms cubic-bezier(.2,.8,.3,1) forwards}
+  @keyframes dsub{0%{opacity:0;transform:translateY(5px)}16%{opacity:1;transform:translateY(0)}70%{opacity:1}
+    100%{opacity:0;transform:translateY(-8px)}}
+  .pf-survival-label{font-size:1em;letter-spacing:.05em}
   .pf-survival-status-wrap{display:flex;align-items:center;justify-content:center;gap:.09em;margin-top:.10em;line-height:1}
   .pf-survival-status{font-style:normal;margin-top:.12em;text-shadow:0 2px 4px rgba(0,0,0,.88),0 0 8px currentColor}
   .pf-survival-emoji{display:inline-block;flex:none;align-self:center;line-height:1;
@@ -105,11 +110,7 @@
   .shake{animation:shk 390ms ease-out}
   @keyframes shk{0%,100%{transform:translate(-50%,-50%)}20%{transform:translate(calc(-50% - 5px),-50%)}
     45%{transform:translate(calc(-50% + 4px),-50%)}70%{transform:translate(calc(-50% - 2px),-50%)}}
-  .impact-text{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:74px;font-weight:950;
-    font-family:'Bangers HUD','Bangers',Impact,sans-serif;color:#fff;text-shadow:0 0 24px rgba(255,40,40,.9);
-    pointer-events:none;animation:imp 900ms ease-out forwards}
-  @keyframes imp{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
-    100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+  /* v5.3.1: pa popup te madh "-%" mbi ekran */
 
   /* aureola dramatike (lokale, rreth HUD-it — nuk skuq ekranin) + flash */
   .pf-survival-aura{position:absolute;left:50%;top:50%;width:190%;height:250%;transform:translate(-50%,-50%);
@@ -196,12 +197,12 @@
     <div class="pf-survival-verdict" id="svVerdict" style="display:none">TOTALED</div>
   </div>
 
-  <div id="stageHint">Kliko <b>CRASH</b> për të provuar dramatizmin. Kliko <b>REPAIR</b> për t'u kthyer në 100%.</div>
+  <div id="stageHint">Kliko <b>CRASH</b> për dramatizmin (pa popup “-%” mbi ekran). Kliko <b>REPAIR</b> për 100%.</div>
 </div>
 
 <aside id="panel">
   <h1>HUD PRO · Survival Lab</h1>
-  <div class="sub">Pasqyra e HUD PRO <b>v5.2</b>: Bangers i ngulitur, paketat angleze, 5 ngjyra, FX dramatike, zë dhe GAME OVER — saktësisht si në mod.</div>
+  <div class="sub">Pasqyra e HUD PRO <b>v5.3.1</b>: Bangers i ngulitur, paketat angleze, 5 ngjyra, FX dramatike, zë dhe GAME OVER — saktësisht si në mod.</div>
 
   <div class="sec">
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Simulimi <span>▾</span></h2>
@@ -220,6 +221,7 @@
   <div class="sec">
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Fonti &amp; Madhësia <span>▾</span></h2>
     <div class="body">
+      <div class="row"><label>FONTI YT</label><input type="file" id="userFont" accept=".ttf,.otf,.woff,.woff2" style="width:180px;font-size:11px"></div>
       <div class="row"><label>Fonti</label>
         <select id="font" style="width:180px">
           <option value="bangers">Bangers (i ngulitur)</option>
@@ -390,7 +392,7 @@
   var COLORS = {safe:"#42ff68",caution:"#ffd23f",danger:"#ff7a2f",critical:"#ff334d",dead:"#b3122b"};
 
   var DEFAULTS = {
-    value:100, font:"bangers", size:54, weight:900, track:0, skew:0, italic:false, upper:true,
+    value:100, font:"bangers", size:54, weight:400, track:0, skew:0, italic:false, upper:true,
     fx:"none", pack:"dramatic", theta:80, thd:55, thc:20,
     tSafe:"STEADY", tCaution:"CAREFUL", tDanger:"DANGER", tCritical:"CRITICAL", tDead:"TOTALED",
     cSafe:"#42ff68", cCaution:"#ffd23f", cDanger:"#ff7a2f", cCritical:"#ff334d", cDead:"#b3122b",
@@ -461,7 +463,8 @@
     var v = Math.max(0, Math.min(100, display));
     var st = stateOf(v), col = colorOf(v);
 
-    var fam = {bangers:"'Bangers HUD','Bangers',Impact,'Arial Black',sans-serif",
+    var fam = {user:"'HUD User Font','Bangers HUD',Impact,sans-serif",
+               bangers:"'Bangers HUD','Bangers',Impact,'Arial Black',sans-serif",
                narrow:"'Arial Narrow','Segoe UI',Arial,sans-serif",
                arialblack:"'Arial Black',Arial,sans-serif",
                impact:"Impact,'Haettenschweiler','Arial Narrow Bold',sans-serif"}[S.font];
@@ -483,7 +486,7 @@
     elVal.firstChild.nodeValue = Math.round(v);
     elVal.style.letterSpacing = S.track + "em";
     elVal.style.webkitTextStroke = Math.max(0, 1) + "px rgba(0,0,0,.6)";
-    elVal.style.textShadow = (S.fx === "neon") ? "" : "0 3px 3px rgba(0,0,0,.88), 0 0 10px " + col;
+    elVal.style.textShadow = (S.fx === "neon") ? "" : "0 3px 3px rgba(0,0,0,.88)";
 
     elLabel.style.display = S.labelOn ? "" : "none";
     elStatus.textContent = phraseFor(st);
@@ -562,6 +565,19 @@
   bind("track","track", function(v){ $("trackOut").textContent = v.toFixed(2); });
   bind("skew","skew", function(v){ $("skewOut").textContent = v + "°"; });
   bind("font","font"); bind("italic","italic"); bind("upper","upper");
+  $("userFont").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(e){
+      var st = document.getElementById("userFontStyle") || (function(){ var s=document.createElement("style"); s.id="userFontStyle"; document.head.appendChild(s); return s; })();
+      st.textContent = "@font-face{font-family:'HUD User Font';src:url(" + e.target.result + ");}";
+      S.userFont = f.name;
+      var sel = $("font");
+      if (!sel.querySelector('option[value="user"]')) { var o=document.createElement("option"); o.value="user"; o.textContent="Fonti im ("+f.name+")"; sel.appendChild(o); }
+      sel.value = "user"; S.font = "user"; render();
+    };
+    r.readAsDataURL(f);
+  });
   bind("thCaution","theta", function(v){ $("thCautionOut").textContent = v; });
   bind("thDanger","thd", function(v){ $("thDangerOut").textContent = v; });
   bind("thCritical","thc", function(v){ $("thCriticalOut").textContent = v; });
@@ -700,8 +716,6 @@
     if (S.shakeOn){ sv.classList.remove("shake"); void sv.offsetWidth; sv.classList.add("shake"); }
     if (S.pulseOn){ sv.classList.remove("pulse-on"); void sv.offsetWidth; sv.classList.add("pulse-on"); }
     if (S.statusPulse){ sv.classList.remove("pulse-status"); void sv.offsetWidth; sv.classList.add("pulse-status"); }
-    var t = document.createElement("div"); t.className = "impact-text"; t.textContent = "💥 -" + Math.round(amount);
-    document.getElementById("stage").appendChild(t); setTimeout(function(){ t.remove(); }, 900);
     render();
   }
   $("soundMode").addEventListener("change", function(){ S.soundMode = this.value; startSound(); });
