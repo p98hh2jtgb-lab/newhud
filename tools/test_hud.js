@@ -225,6 +225,12 @@ check('badge-i i versionit në panel', HTML.includes('pf-version') && HTML.inclu
 check('toast-i i ngarkimit ekziston', HTML.includes('pf-toast') && typeof iso.showToast === 'function');
 iso.showToast(); $timeout.flush(20);
 check('toast-i hapet', iso.toast.show === true);
+check('toast-i është JASHTË panelit (duket edhe i mbyllur)', (function() {
+  var t = win.document.querySelector('.pf-toast');
+  if (!t) return false;
+  return !t.closest('.pf-panel');
+})(), 'toast brenda panelit');
+check('toast-i shfaq versionin', /5\.3\.0/.test(txt('.pf-toast') || ''), txt('.pf-toast'));
 $timeout.flush(6500);
 check('toast-i mbyllet vetë', iso.toast.show === false);
 check('tab-i DIAGNOSTIKA ekziston', HTML.includes('DIAGNOSTIKA') && HTML.includes('runDiagnostics'));

@@ -1188,16 +1188,16 @@
     </div>
   </div>
 
+  <!-- v5.3.0: toast që tregon se versioni i re u ngarkua vërtet -->
+  <div class="pf-toast" ng-if="toast.show">
+    HUD PRO <b>{{modVersion}}</b> u ngarkua ✓
+    <small>Fonti Bangers: <span ng-class="fontOk ? 'ok' : 'bad'">{{fontOk ? 'OK ✓' : 'NUK u ngarkua ✗'}}</span>
+      · Pa ekran të kuq · Vula “TOTALED”</small>
+  </div>
+
   <button class="pf-mini-open" ng-if="!cfg.showPanel && cfg.showMiniButton" ng-click="openPanel()" title="Open HUD panel">⚙</button>
 
   <div class="pf-panel" ng-if="cfg.showPanel" ng-style="panelStyle()">
-    <!-- v5.3.0: toast që tregon se versioni i re u ngarkua vërtet -->
-    <div class="pf-toast" ng-if="toast.show">
-      HUD PRO <b>{{modVersion}}</b> u ngarkua ✓
-      <small>Fonti Bangers: <span ng-class="fontOk ? 'ok' : 'bad'">{{fontOk ? 'OK ✓' : 'NUK u ngarkua ✗'}}</span>
-        · Pa ekran të kuq · Vula “TOTALED”</small>
-    </div>
-
     <div class="pf-header" ng-mousedown="startPanelDrag($event)">
       <div>
         <div class="pf-title">HUD PRO Pass/Fail <span class="pf-version">v{{modVersion}}</span></div>
