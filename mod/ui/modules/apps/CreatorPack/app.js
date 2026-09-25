@@ -34,6 +34,50 @@ angular.module('beamng.apps')
     link: function(scope, element) {
       var STORAGE_KEY = 'pfhud_config_v14_working_upload_clone';
 
+      // =====================================================
+      // v5.3.0 — Versioni shfaqet brenda HUD-it, që të shihet
+      // menjëherë nëse BeamNG ka ngarkuar versionin e re.
+      // =====================================================
+      var MOD_VERSION = '5.3.0';
+      scope.modVersion = MOD_VERSION;
+      scope.storageKey = STORAGE_KEY;
+      scope.toast = { show: false };
+      var toastTimer = null;
+
+      scope.fontOk = false;
+      scope.fontCheckText = 'duke kontrolluar…';
+      scope.fontFamilyText = 'duke kontrolluar…';
+
+      function checkBangers() {
+        try {
+          var ok = false;
+          if (window.document && window.document.fonts && window.document.fonts.check) {
+            ok = window.document.fonts.check('16px "Bangers HUD"');
+          }
+          scope.fontOk = !!ok;
+          scope.fontCheckText = ok ? 'document.fonts.check OK' : "fonti nuk u gjet në dokument";
+        } catch (e) {
+          scope.fontCheckText = 'kontrolli dështoi: ' + e.message;
+        }
+        try {
+          var node = element && element[0] ? element[0].querySelector('.pf-survival') : null;
+          scope.fontFamilyText = node && window.getComputedStyle
+            ? String(window.getComputedStyle(node).fontFamily || '').split(',')[0]
+            : 'pa element';
+        } catch (e2) { scope.fontFamilyText = 'pa element'; }
+      }
+      scope.checkBangers = checkBangers;
+      scope.runDiagnostics = function() { checkBangers(); scope.persist(); };
+
+      scope.showToast = function() {
+        if (toastTimer) { try { $timeout.cancel(toastTimer); } catch (e) {} }
+        scope.toast.show = false;
+        $timeout(function() {
+          scope.toast.show = true;
+          toastTimer = $timeout(function() { scope.toast.show = false; }, 6000);
+        }, 10);
+      };
+
       function defaultItems(count) {
         var items = [];
         for (var i = 0; i < count; i++) {
@@ -957,10 +1001,15 @@ angular.module('beamng.apps')
       syncSurvivalDisplay();
 
       // v5.2: nis rrahjen, rrotullimin e frazave dhe ze rin ne sfond
+      // v5.3.0: kontrollon fontin dhe shfaq toast-in me versionin
       $timeout(function() {
         refreshSurvivalDrama();
         restartSurvivalRotation();
         startSurvivalSound();
+        checkBangers();
+        scope.showToast();
+        // rikontrollo pasi fonti të jetë ngarkuar vërtet
+        $timeout(function() { checkBangers(); }, 1400);
       }, 400);
 
       function showSurvivalDelta(drop, oldValue) {
@@ -2832,6 +2881,7 @@ angular.module('beamng.apps')
         if (unwatchSurvivalEmoji) { try { unwatchSurvivalEmoji(); } catch(e) {} }
         // ---- v5.2 ----
         if (unwatchSurvivalState) { try { unwatchSurvivalState(); } catch(e) {} }
+        if (toastTimer) { try { $timeout.cancel(toastTimer); } catch(e) {} }
         if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch(e) {} }
         if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch(e) {} }
         if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch(e) {} }

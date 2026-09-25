@@ -217,6 +217,26 @@ check('config u ruajt me v5.2 fushat',
 check('fushat __raw nuk ruhen', !Object.keys(saved).some(k => k.includes('__raw')));
 
 // =====================================================================
+// v5.3.0 — versioni, toast, diagnostika
+// =====================================================================
+console.log('\n— v5.3.0: versioni & diagnostika —');
+check('versioni shfaqet në HUD', iso.modVersion === '5.3.0', iso.modVersion);
+check('badge-i i versionit në panel', HTML.includes('pf-version') && HTML.includes('v{{modVersion}}'));
+check('toast-i i ngarkimit ekziston', HTML.includes('pf-toast') && typeof iso.showToast === 'function');
+iso.showToast(); $timeout.flush(20);
+check('toast-i hapet', iso.toast.show === true);
+$timeout.flush(6500);
+check('toast-i mbyllet vetë', iso.toast.show === false);
+check('tab-i DIAGNOSTIKA ekziston', HTML.includes('DIAGNOSTIKA') && HTML.includes('runDiagnostics'));
+iso.runDiagnostics();
+check('diagnostika raporton fontin', typeof iso.fontOk === 'boolean' && /document.fonts|fonti/i.test(iso.fontCheckText),
+  iso.fontCheckText);
+check('storable key raportohet', iso.storageKey === 'pfhud_config_v14_working_upload_clone');
+let dErr = null;
+try { iso.runDiagnostics(); } catch (e) { dErr = e.message; }
+check('runDiagnostics pa gabime', dErr === null, dErr);
+
+// =====================================================================
 // Migrimi nga nje konfigurim i vjetër (v5.0 / v5.1)
 // =====================================================================
 console.log('\n— migrimi nga v5.1 —');

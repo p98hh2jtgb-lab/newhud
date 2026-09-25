@@ -1,36 +1,65 @@
-HUD PRO v5.2.1 — BANGERS EVERYWHERE + CLEARER STATUS + NO RED SCREEN
-=====================================================================
+HUD PRO v5.3.0 — LEXO KËTË TË PARË (INSTALIM I SIGURT)
+======================================================
+⚠ NËSE NUK PA NDONJË NDRYSHIM KUR E INSTALOVE VERSIONIN E KALUAR,
+  SHKAKU MA I ZAKONSHËM: ka ende ZIP të vjetër CreatorPack në dosjen e mod-eve.
+  BeamNG i ngarkon TË DYJA dhe shpesh fiton i vjetri.
 
-FIXES IN v5.2.1 (lexoji këto të parat)
---------------------------------------
-1) FONTI: Bangers tani aplikohet me të vërtetë. Në v5.2 blloqet @font-face u
-   shtuan, por widget-i vazhdonte të kërkonte 'Futura Extra Bold' — prandaj
-   shihje një font tjetër. Tani:
-     - fonti bazë i HUD-it është 'Bangers HUD' (i ngulitur);
-     - titulli "SURVIVAL CHANCE", përqindja dhe statusi (SAFE e këto) kanë
-       TË NJËJTIN font — por NGYJRAT mbeten të ndara si ma parë;
-     - Bangers ka vetëm një peshë (400): u hoq bold/italic-i i rremë që e
-       bënte të turbullt;
-     - fonti vjen edhe si skedar (Bangers.woff2 / Bangers-LatinExt.woff2)
-       edhe si base64 — punon gjithsesi, edhe offline.
-2) EKRANI I KUQ: vignette-a që skuqte krejt ekranin u hoq KREJT. Në vend të
-   saj ka një AUREOLË dramatike vetëm rreth HUD-it, me ngjyrën e rrezikut —
-   loja mbetet e pastër. DRAMA -> "Aureolë dramatike rreth HUD-it".
-3) GAME OVER: overlay-i gjigant mbi lojën u hoq. Tani del një VULË kompakte
-   "TOTALED" brenda HUD-it (teksti, kohëzgjatja dhe ON/OFF të editueshme).
-   Ma e qartë për audiencën dhe nuk t'zë ekranin.
-4) EMOJI: bug-u që shfaqte 💀 edhe në 100% u rregullua (emoji zgjidhet nga
-   niveli, jo nga fjala e paketës). Emoji-t tani janë TË EDITUESHME: 5 fusha
-   te SURVIVAL -> Emoji Mood.
-5) FRAZAT 20% -> 0% u bënë ma të qarta për audiencën:
-     Dramatic : CRITICAL · ONE HIT AWAY · ALMOST WRECKED  ->  TOTALED / WRECKED
-     Streamer : ONE HP · COOKED · GG                      ->  WRECKED / SKILL ISSUE
-     Kujdesi  : CAREFUL · TENSE · GETTING RISKY
-     Rreziku  : DANGER · ONE MORE HIT · BACK OFF
+INSTALIM HAP PAS HAPI
+---------------------
+1. Hape dosjen:  Documents\BeamNG.drive\mods
+2. FSHIJ çdo gjë që ka të bëjë me CreatorPack / HUD PRO:
+      - CreatorPack_v5.0*.zip / v5.1*.zip / v5.2*.zip  (krejt versionet e vjetra)
+      - çdo DOSJE e ekstraktuar "CreatorPack" ose "unpacked/CreatorPack"
+   Lëre VETËM një skedar:  CreatorPack_v5.3.0_BANGERS_FIX.zip
+3. Kopjo ZIP-in e re (MOS e ekstrakto).
+4. START BEAMNG (nëse loja është hapur, ZIP-i i re nuk shihet!).
+   Në lojë:  Mods -> Reload UI  (ose restart i plotë).
+5. Hap panelin e HUD-it dhe shiko:
 
-ORIGJINALI I v5.2
------------------
+       HUD PRO Pass/Fail  [v5.3.0]
 
+   Si dhe një toast lart për 6 sekonda:
+
+       HUD PRO 5.3.0 u ngarkua ✓
+       Fonti Bangers: OK ✓ · Pa ekran të kuq · Vula "TOTALED"
+
+   Nëse shkruan v5.3.0 -> versioni i re është aktiv.
+   Nëse shkruan ndonjë version tjetër (ose asgjë) -> ende po ngarkohet ZIP i vjetër.
+
+KONTROLL I SHPEJTË: tab-i  TJERA -> "DIAGNOSTIKA (v5.3.0)"
+   - Versioni i ngarkuar
+   - Fonti Bangers: PO ✓ / JO ✗  (+ shpjegim nëse nuk u ngarkua)
+   - Fonti i HUD-it në përdorim
+   - Konfirmim: ekrani i kuq HEQUR, overlay GAME OVER HEQUR
+
+ÇKA U RREGULLUA NË v5.3.0 (kundrejt v5.2.1)
+-------------------------------------------
+1) Fonti Bangers aplikohet ME TË VËRTETË: titulli "SURVIVAL CHANCE", përqindja
+   dhe statusi (SAFE/DANGER e këto) ndajnë të njëjtin font; NGYJRAT mbeten të ndara.
+   (Në v5.2 blloqet @font-face ekzistonin, por widget-i kërkonte ende Futura-s.)
+2) EKRANI I KUQ u hoq KREJT. Në vend të tij: aureolë dramatike vetëm rreth HUD-it.
+3) "GAME OVER" gjigant u hoq -> vulë kompakte "TOTALED" brenda HUD-it.
+4) Emoji 💀 në 100% (bug) u rregullua; emoji-t tani janë të editueshme.
+5) Frazat 20% -> 0% u bënë ma të qarta:
+      CRITICAL · ONE HIT AWAY · ALMOST WRECKED  ->  TOTALED · WRECKED
+      ONE HP · COOKED · GG                      ->  WRECKED · SKILL ISSUE
+6) Versioni shfaqet brenda HUD-it + toast në nisje + DIAGNOSTIKA.
+
+ORIGJINALI I v5.2 (referencë)
+-----------------------------
+1) Fonti Bangers aplikohet ME TË VËRTETË: titulli "SURVIVAL CHANCE", përqindja
+   dhe statusi (SAFE/DANGER e këto) ndajnë të njëjtin font; NGYJRAT mbeten të ndara.
+   (Në v5.2 blloqet @font-face ekzistonin, por widget-i kërkonte ende Futura-s.)
+2) EKRANI I KUQ u hoq KREJT. Në vend të tij: aureolë dramatike vetëm rreth HUD-it.
+3) "GAME OVER" gjigant u hoq -> vulë kompakte "TOTALED" brenda HUD-it.
+4) Emoji 💀 në 100% (bug) u rregullua; emoji-t tani janë të editueshme.
+5) Frazat 20% -> 0% u bënë ma të qarta:
+      CRITICAL · ONE HIT AWAY · ALMOST WRECKED  ->  TOTALED · WRECKED
+      ONE HP · COOKED · GG                      ->  WRECKED · SKILL ISSUE
+6) Versioni shfaqet brenda HUD-it + toast në nisje + DIAGNOSTIKA.
+
+ORIGJINALI I v5.2 (referencë)
+-----------------------------
 WHAT'S NEW IN v5.2
 ------------------
 1) Font: Bangers (SIL OFL 1.1) is embedded inside the HUD as base64 WOFF2.

@@ -1,8 +1,8 @@
 {
   "name": "HUD PRO — Damage Ring",
   "author": "daimy",
-  "version": "5.2.1",
-  "description": "HUD PRO v5.2.1 - Bangers everywhere, clearer status phrases, no red screen (local aura), TOTALED badge, fixed emoji, editable emojis.",
+  "version": "5.3.0",
+  "description": "HUD PRO v5.3.0 - Bangers everywhere, no red screen, TOTALED badge, clearer statuses, version badge and diagnostics.",
   "directive": "creatorpackPanel",
   "domElement": "<creatorpack-panel></creatorpack-panel>",
   "css": {

@@ -1,5 +1,17 @@
 # Changelog — HUD PRO (CreatorPack)
 
+## v5.3.0 — “Sigurim + diagnostikë” (kjo është versioni i pastër)
+**Pse kjo version?** Përdoruesi raportoi se pas instalimit “nuk ndryshoi asgjë”. Shkaku ma i zakonshëm: dy ZIP-e CreatorPack njëkohësisht në dosjen e mod-eve (i vjetri fiton). Kjo version e bën të pamundur ngatërrimin:
+
+- **Badge i versionit brenda HUD-it**: titulli i panelit tani thotë `HUD PRO Pass/Fail  [v5.3.0]`.
+- **Toast në nisje** (6s): “HUD PRO 5.3.0 u ngarkua ✓ — Fonti Bangers: OK ✓ / NUK u ngarkua ✗”.
+- **DIAGNOSTIKA** (tab TJERA): versioni i ngarkuar, gjendja e fontit (`document.fonts.check`), fonti në përdorim, konfirmim që ekrani i kuq dhe overlay GAME OVER janë hequr, çelësi i ruajtjes. Me buton “Trego toast-in përsëri”.
+- **README i ri** me hap pas hapi + seksion troubleshooting.
+- ZIP-i quhet **CreatorPack_v5.3.0_BANGERS_FIX.zip** dhe është i vetmi ZIP i modit në repo (të vjetrit u fshinë).
+
+Përmbajtja funksionale = v5.2.1 (Bangers kudo, pa ekran të kuq, vulë TOTALED, fraza të qarta, emoji fix).
+
+## v5.2.1 — “Bangers kudo + pa ekran të kuq”
 ## v5.2.1 — “Bangers kudo + pa ekran të kuq”
 **Rregullime**
 - **Fonti Bangers nuk aplikohej** në v5.2: blloqet `@font-face` ekzistonin, por `.pf-survival` kërkonte ende `'Futura Extra Bold'`. Tani baza është `'Bangers HUD'` → titulli, `%` dhe statusi kanë të njëjtin font (ngjyrat mbeten të ndara).

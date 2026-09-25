@@ -99,6 +99,38 @@
     .pf-panel::-webkit-scrollbar { width:10px; }
     .pf-panel::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.16); border-radius:10px; }
 
+    /* ==================================================
+       v5.3.0 — BADGE I VERSIONIT + TOAST "U NGARKUA"
+       (që të shihet menjëherë se cila version është aktiv)
+       ================================================== */
+    .pf-version {
+      display:inline-block; margin-left:8px; padding:2px 8px 3px; border-radius:999px;
+      font-size:12px; font-weight:900; letter-spacing:.06em; vertical-align:middle;
+      background:linear-gradient(180deg,#ff9a34,#ff7a12); color:#180d00;
+      box-shadow:0 2px 8px rgba(255,140,20,.35);
+    }
+    .pf-toast {
+      position:absolute; left:50%; top:14px; transform:translateX(-50%);
+      z-index:12; pointer-events:none; white-space:nowrap;
+      background:rgba(8,10,14,.94); border:1px solid rgba(255,138,30,.55);
+      border-radius:12px; padding:10px 16px; font-size:14px; font-weight:700; color:#fff;
+      box-shadow:0 10px 30px rgba(0,0,0,.5);
+      animation:pfToast 6s cubic-bezier(.2,.9,.3,1) forwards;
+    }
+    .pf-toast small { display:block; font-weight:400; font-size:11.5px; color:#9fb0c8; margin-top:3px; }
+    .pf-toast .ok { color:#68ffa4; }
+    .pf-toast .bad { color:#ff5b5b; }
+    @keyframes pfToast {
+      0% { opacity:0; transform:translateX(-50%) translateY(-14px); }
+      6% { opacity:1; transform:translateX(-50%) translateY(0); }
+      88% { opacity:1; }
+      100% { opacity:0; transform:translateX(-50%) translateY(-10px); }
+    }
+    .pf-diag { font-family:ui-monospace,Consolas,monospace; font-size:12px; line-height:1.7; color:#cfe0f5; }
+    .pf-diag b { color:#fff; }
+    .pf-diag .ok { color:#68ffa4; }
+    .pf-diag .bad { color:#ff6b6b; }
+
     .pf-mini-open {
       position:absolute; right:16px; top:16px; width:26px; height:26px; border-radius:50%;
       background:rgba(0,0,0,0.10); border:1px solid rgba(255,255,255,0.10);
@@ -1159,9 +1191,16 @@
   <button class="pf-mini-open" ng-if="!cfg.showPanel && cfg.showMiniButton" ng-click="openPanel()" title="Open HUD panel">⚙</button>
 
   <div class="pf-panel" ng-if="cfg.showPanel" ng-style="panelStyle()">
+    <!-- v5.3.0: toast që tregon se versioni i re u ngarkua vërtet -->
+    <div class="pf-toast" ng-if="toast.show">
+      HUD PRO <b>{{modVersion}}</b> u ngarkua ✓
+      <small>Fonti Bangers: <span ng-class="fontOk ? 'ok' : 'bad'">{{fontOk ? 'OK ✓' : 'NUK u ngarkua ✗'}}</span>
+        · Pa ekran të kuq · Vula “TOTALED”</small>
+    </div>
+
     <div class="pf-header" ng-mousedown="startPanelDrag($event)">
       <div>
-        <div class="pf-title">HUD PRO Pass/Fail</div>
+        <div class="pf-title">HUD PRO Pass/Fail <span class="pf-version">v{{modVersion}}</span></div>
         <div class="pf-sub">Rrathë transparent për video. PASS/FAIL ndryshon ngjyrën dhe shenjën e rrethit. Konfiguroje një herë, pastaj fshehe panelin.</div>
       </div>
       <button class="pf-close" ng-click="closePanel()">×</button>
@@ -1988,6 +2027,35 @@
               <button class="pf-btn small" ng-click="resetCostOne(item)">Zero dëmin</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pf-section" ng-show="tab==='tjera'">
+      <div class="pf-label">DIAGNOSTIKA (v5.3.0)</div>
+      <div class="pf-card">
+        <div class="pf-diag">
+          Versioni i ngarkuar: <b>v{{modVersion}}</b><br>
+          Fonti Bangers: <span ng-class="fontOk ? 'ok' : 'bad'"><b>{{fontOk ? 'PO ✓' : 'JO ✗'}}</b></span>
+            <span style="color:#7d8ba0">({{fontCheckText}})</span><br>
+          Fonti i HUD-it: <b>{{fontFamilyText}}</b><br>
+          Ekran i kuq (vignette): <span class="ok"><b>HEQUR ✓</b></span> — vetëm aureolë lokale<br>
+          Overlay “GAME OVER”: <span class="ok"><b>HEQUR ✓</b></span> — vula “{{cfg.survivalVerdictText}}” brenda HUD-it<br>
+          Zëri: <b>{{survivalSoundOn() ? 'ON' : 'OFF'}}</b> · Stream mode: <b>{{streamModeOn() ? 'ON' : 'OFF'}}</b><br>
+          Ruajtja: <b>{{storageKey}}</b>
+        </div>
+        <div class="pf-row" style="margin-top:10px">
+          <button class="pf-btn" ng-click="runDiagnostics()">↻ Rifresko diagnostikën</button>
+          <button class="pf-btn orange" ng-click="showToast()">Trego toast-in përsëri</button>
+        </div>
+        <div class="pf-note" ng-if="!fontOk" style="color:#ffb3b3">
+          ⚠ Fonti Bangers nuk u ngarkua. Shkaqet ma të zakonshme: (1) ka ende ZIP të vjetër
+          CreatorPack në <b>Documents/BeamNG.drive/mods</b> — fshiji krejt të vjetrit; (2) modi nuk u
+          rifreskua — restarto lojën (jo vetëm Reload UI). Shiko README.txt në ZIP.
+        </div>
+        <div class="pf-note">
+          Nëse këtu shkruan një version tjetër (p.sh. v5.1), do të thotë që BeamNG është duke ngarkuar
+          një ZIP të vjetër — fshije atë nga dosja e mod-eve.
         </div>
       </div>
     </div>
