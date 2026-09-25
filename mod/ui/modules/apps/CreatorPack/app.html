@@ -854,8 +854,7 @@
     .pf-survival.font-bangers .pf-survival-label,
     .pf-survival.font-bangers .pf-survival-value,
     .pf-survival.font-bangers .pf-survival-old,
-    .pf-survival.font-bangers .pf-survival-status,
-    .pf-survival.font-bangers .pf-survival-verdict {
+    .pf-survival.font-bangers .pf-survival-status {
       font-weight:400;
       font-style:normal;
     }
@@ -868,8 +867,7 @@
     .pf-survival.font-user .pf-survival-label,
     .pf-survival.font-user .pf-survival-value,
     .pf-survival.font-user .pf-survival-old,
-    .pf-survival.font-user .pf-survival-status,
-    .pf-survival.font-user .pf-survival-verdict {
+    .pf-survival.font-user .pf-survival-status {
       font-family:'HUD User Font','Bangers HUD',Impact,sans-serif;
       font-style:normal;
     }
@@ -1091,40 +1089,9 @@
       0%,100% { opacity:calc(var(--aura,0) * .45); }
       50%     { opacity:var(--aura,0); }
     }
-    .pf-flash {
-      position:absolute; inset:0; pointer-events:none; z-index:9; opacity:0;
-      background:rgba(255,28,28,.42);
-    }
-    .pf-flash.big { background:rgba(255,18,18,.60); }
-    .pf-flash.go { animation:pfRedFlash 460ms ease-out; }
-    .pf-flash.big.go { animation:pfRedFlash 640ms ease-out; }
-    @keyframes pfRedFlash { 0%{opacity:0} 10%{opacity:1} 100%{opacity:0} }
+    /* v5.3.2: flash-i i kuq u hoq KREJT — s'ka ma asgjë të kuqe që shfaqet mbi lojën. */
 
-    /* v5.2.1: në vend të "GAME OVER" gjigant mbi lojën, një vulë kompakte
-       brenda HUD-it (ma e qartë për audiencën, nuk t'zë ekranin). */
-    .pf-survival-verdict {
-      margin-top:.14em;
-      padding:.10em .34em .14em;
-      font-size:.34em;
-      font-weight:400;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      color:#fff;
-      background:linear-gradient(180deg,rgba(190,10,30,.92),rgba(120,0,16,.92));
-      border:1px solid rgba(255,120,120,.55);
-      border-radius:.22em;
-      box-shadow:0 3px 12px rgba(0,0,0,.55),0 0 14px rgba(255,30,50,.45);
-      text-shadow:0 2px 3px rgba(0,0,0,.75);
-      transform-origin:50% 50%;
-      animation:pfVerdict 3.0s cubic-bezier(.2,1.1,.3,1) forwards;
-    }
-    @keyframes pfVerdict {
-      0%   { opacity:0; transform:scale(.4) rotate(-6deg); }
-      12%  { opacity:1; transform:scale(1.14) rotate(2deg); }
-      20%  { transform:scale(1) rotate(0); }
-      78%  { opacity:1; transform:scale(1); }
-      100% { opacity:0; transform:scale(1.06); }
-    }
+    /* v5.3.2: vula “TOTALED” u hoq KREJT — në 0% mbetet përqindja + statusi. */
 
   </style>
 
@@ -1151,8 +1118,7 @@
 
   <!-- v4.1: repair-cost line removed; damage now lives in the vehicle rings. -->
 
-  <!-- v5.3.1: vetëm flash (vignette dhe popup-i i madh "-%" u hoqën krejt) -->
-  <div class="pf-flash" ng-class="{go: survival.flash, big: survival.flashBig}"></div>
+  <!-- v5.3.2: as flash i kuq, as vignette, as popup "-%" — dramaja mbetet brenda HUD-it -->
 
   <!-- v5.3.1: këtu injektohet fonti që ngarkon vetë perdoruesi -->
   <style id="pfUserFontStyle"></style>
@@ -1180,7 +1146,6 @@
            ng-style="survivalStatusStyle()">{{survivalStatus()}}</div>
     </div>
     <div class="pf-survival-meter" ng-if="cfg.survivalShowMeter"><div ng-style="survivalMeterStyle()"></div></div>
-    <div class="pf-survival-verdict" ng-if="survival.verdictShow">{{cfg.survivalVerdictText || 'TOTALED'}}</div>
   </div>
 
   <!-- v5.1: vehiclesOn === false e fsheh rreshtin e rrumbullakëve — mbetet vetëm Survival Chance.
@@ -1625,9 +1590,10 @@
         <button class="pf-btn" ng-class="{active:cfg.survivalStatusPack==='hardcore'}" ng-click="setSurvivalPack('hardcore')">Hardcore</button>
         <button class="pf-btn" ng-class="{active:cfg.survivalStatusPack==='custom'}" ng-click="setSurvivalPack('custom')">Custom</button>
       </div>
-      <div class="pf-note" ng-if="cfg.survivalStatusPack==='dramatic'">Dramatic: STEADY · TENSE · IN PERIL · LAST BREATH · WRECKED (3 fraza për nivel, rrotullohen).</div>
-      <div class="pf-note" ng-if="cfg.survivalStatusPack==='streamer'">Streamer: WE'RE GOOD · UH OH · OH NO · GG · SKILL ISSUE.</div>
-      <div class="pf-note" ng-if="cfg.survivalStatusPack==='hardcore'">Hardcore: OK · HMM · OUCH · PRAY · DOOMED.</div>
+      <div class="pf-note" ng-if="cfg.survivalStatusPack==='dramatic'">Dramatic: 100% STEADY · 79% CAREFUL · 54% DANGER · 19% CRITICAL / ONE HIT AWAY / DON'T BLINK · 0% RUN OVER / END OF THE ROAD / BACK TO THE GARAGE.</div>
+      <div class="pf-note" ng-if="cfg.survivalStatusPack==='streamer'">Streamer: WE'RE GOOD · UH OH · GETTING SPICY · ONE HP · HANDS SHAKING · 0% THAT'S IT / END OF THE ROAD.</div>
+      <div class="pf-note" ng-if="cfg.survivalStatusPack==='hardcore'">Hardcore: OK · HMM · OUCH · HOLD ON · 0% IT'S OVER.</div>
+      <div class="pf-note">Fjalët e vjetra klishe u hoqën krejt — edhe në tekstin Custom zëvendësohen vetë me frazat e reja.</div>
       <div class="pf-note" ng-if="cfg.survivalStatusPack==='classic'">Classic: SAFE · CAUTION · DANGER · CRITICAL · NO CHANCE.</div>
       <div class="pf-note" ng-if="cfg.survivalStatusPack==='custom'">Custom: shkruaj çka të duash (max 18 karaktere).</div>
       <div class="pf-grid" style="margin-top:9px">
@@ -1868,19 +1834,16 @@
       <div class="pf-toggle">
         <label><input type="checkbox" ng-model="cfg.survivalHeartbeat" ng-change="persist();refreshSurvivalDrama()"> Rrahje zemre (HUD-i pulson)</label>
         <label><input type="checkbox" ng-model="cfg.survivalGlowPulse" ng-change="persist();refreshSurvivalDrama()"> Aureolë dramatike rreth HUD-it (në rrezik)</label>
-        <label><input type="checkbox" ng-model="cfg.survivalRedFlash" ng-change="persist()"> Flash i kuq në KRITIK / 0%</label>
+
         <label><input type="checkbox" ng-model="cfg.survivalCriticalGlitch" ng-change="persist()"> Glitch i statusit në kritik</label>
-        <label><input type="checkbox" ng-model="cfg.survivalVerdictOn" ng-change="persist()"> Vula “TOTALED” brenda HUD-it kur arrin 0%</label>
       </div>
       <div class="pf-grid" style="margin-top:9px">
         <div class="pf-card"><div class="mini">Heartbeat: {{cfg.survivalHeartbeatAmount}}%</div><input class="pf-range" type="range" min="0" max="100" step="5" ng-model="cfg.survivalHeartbeatAmount" ng-change="persist();refreshSurvivalDrama()"></div>
         <div class="pf-card"><div class="mini">Aureola (shkëlqim rreth HUD-it): {{cfg.survivalGlowAmount}}%</div><input class="pf-range" type="range" min="0" max="100" step="5" ng-model="cfg.survivalGlowAmount" ng-change="persist();refreshSurvivalDrama()"></div>
-        <div class="pf-card"><div class="mini">Teksti i vulës (0%)</div><input class="pf-input" type="text" ng-model="cfg.survivalVerdictText" ng-change="persist()" maxlength="20"></div>
-        <div class="pf-card"><div class="mini">Vula zgjat: {{cfg.survivalVerdictMs}} ms</div><input class="pf-range" type="range" min="1200" max="8000" step="200" ng-model="cfg.survivalVerdictMs" ng-change="persist()"></div>
+        <div class="pf-card"><div class="mini">Fraza më e rëndë (0%)</div><div class="pf-diag" style="padding:6px 0"><b>{{survivalStatus()}}</b></div></div>
       </div>
       <div class="pf-row" style="margin-top:9px">
         <button class="pf-btn orange" ng-click="testDramaticDrop()">💥 Testo -34%</button>
-        <button class="pf-btn red" ng-click="testVerdict()">Testo vulën (0%)</button>
         <button class="pf-btn" ng-click="resetSurvival()">Reset 100%</button>
       </div>
 
@@ -1891,7 +1854,7 @@
         <button class="pf-btn" ng-click="cfg.streamKey = (cfg.streamKey === 'b' ? 'n' : 'b'); persist()">Tasti: {{(cfg.streamKey || 'B').toUpperCase()}}</button>
       </div>
       <div class="pf-note">Kur ndizet: fsheh panelin, rrumullakat e makinave dhe guidat 9:16 — në ekran mbetet vetëm Survival Chance. E njëjta gjë me tastin {{(cfg.streamKey || 'B').toUpperCase()}}.</div>
-      <div class="pf-note" style="margin-top:6px">v5.3.1: pa vignette mbi ekran, pa popup “-%” në qendër. Drama mbetet vetëm rreth HUD-it (aureola) — fike krejt me 0% ose hiqe shenjën.</div>
+      <div class="pf-note" style="margin-top:6px">v5.3.2: pa flash të kuq, pa vulë “TOTALED”, pa vignette, pa popup “-%”. Në 0% mbeten vetëm përqindja dhe statusi (fraza) — asgjë s’të del mbi lojën.</div>
 
       <div class="pf-divider"></div>
       <div class="pf-label">Bindings (Options → Controls)</div>
@@ -2084,15 +2047,15 @@
     </div>
 
     <div class="pf-section" ng-show="tab==='tjera'">
-      <div class="pf-label">DIAGNOSTIKA (v5.3.0)</div>
+      <div class="pf-label">DIAGNOSTIKA (v5.3.2)</div>
       <div class="pf-card">
         <div class="pf-diag">
           Versioni i ngarkuar: <b>v{{modVersion}}</b><br>
           Fonti Bangers: <span ng-class="fontOk ? 'ok' : 'bad'"><b>{{fontOk ? 'PO ✓' : 'JO ✗'}}</b></span>
             <span style="color:#7d8ba0">({{fontCheckText}})</span><br>
           Fonti i HUD-it: <b>{{fontFamilyText}}</b><br>
-          Ekran i kuq (vignette): <span class="ok"><b>HEQUR ✓</b></span> — vetëm aureolë lokale<br>
-          Overlay “GAME OVER”: <span class="ok"><b>HEQUR ✓</b></span> — vula “{{cfg.survivalVerdictText}}” brenda HUD-it<br>
+          Elemente kuqe mbi ekran: <span class="ok"><b>0 ✓</b></span> — pa vignette, pa flash<br>
+          Vula “TOTALED”: <span class="ok"><b>HEQUR KREJT ✓</b></span> — në 0% mbetet përqindja + statusi<br>
           Popup “-%” në qendër: <span class="ok"><b>HEQUR ✓</b></span> · Stili i -X%: <b>{{cfg.survivalDeltaStyle}}</b> · Glow: <b>{{cfg.survivalGlow}} px</b><br>
           Titulli vs përqindja: <b>{{(cfg.survivalLabelScale*100)|number:0}}%</b> · Fonti: <b>{{cfg.survivalFontFamily}}</b><br>
           Zëri: <b>{{survivalSoundOn() ? 'ON' : 'OFF'}}</b> · Stream mode: <b>{{streamModeOn() ? 'ON' : 'OFF'}}</b><br>

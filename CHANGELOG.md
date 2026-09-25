@@ -1,5 +1,25 @@
 # Changelog — HUD PRO (CreatorPack)
 
+## v5.3.2 — PA ELEMENTE KUQE + FRAZA TË REJA (Content Clean)
+
+**U hoq krejt (siç e kërkove):**
+- **Flash-i i kuq** mbi ekran (KRITIK / 0%) — hiqet elementi, CSS-ja dhe kodi. Asnjë element i kuq s'del ma mbi lojën.
+- **Vula “TOTALED”** brenda HUD-it — hiqet krejt bashkë me cilësimet (teksti, kohëzgjatja, çelësi). Në 0% mbeten vetëm **përqindja + statusi**.
+- Cilësimet “Flash i kuq” dhe “Vula TOTALED” u hoqën nga paneli; DIAGNOSTIKA tregon `Elemente kuqe mbi ekran: 0 ✓`.
+- Migrimi i pastron vetë fushat e vjetra nga ruajtja (pa resetim të layout-it, ngjyrave, rrathëve, fotove).
+
+**Fraza të reja (ma mirë për kontent):**
+| Nivel | Dramatic | Streamer | Hardcore |
+|---|---|---|---|
+| 100–80% | STEADY · ALL GOOD · SMOOTH | WE'RE GOOD · CHILL · CRUISING | OK |
+| 79–55% | CAREFUL · TENSE · GETTING RISKY | UH OH · GETTING SPICY · CAREFUL NOW | HMM |
+| 54–20% | DANGER · ONE MORE HIT · BACK OFF | OH NO · ONE MORE HIT · BACK OFF | OUCH |
+| 19–1% | CRITICAL · ONE HIT AWAY · DON'T BLINK | ONE HP · HANDS SHAKING · DON'T BLINK | HOLD ON |
+| 0% | RUN OVER · END OF THE ROAD · BACK TO THE GARAGE | THAT'S IT · END OF THE ROAD · RUN OVER | IT'S OVER |
+
+- Fjalët e vjetra (WRECKED, SKILL ISSUE, SEND IT, PRAY, DOOMED, COOKED, GG, GAME OVER) nuk kthehen ma kurrë — edhe në tekstin **Custom** zëvendësohen vetë nga migrimi.
+- Testet: **122 ✔**.
+
 ## v5.3.1 — “Fonti yt, pa glow, pa -% në ekran”
 - **Ngarkues fonti**: buton në panel → zgjidh `.ttf/.otf/.woff/.woff2` → aplikohet te titulli, % dhe statusi (të njëjtin font, ngjyra të ndara). Ruhet në HUD (max ~1.4 MB) + buton “Hiq fontin e ngarkuar”. Fonti ruhet lokalisht, nuk shpërndahet me modin.
 - **Glow = 0** si parazgjedhje (ishte 10 px) — pa shkëlqim mbi tekst.

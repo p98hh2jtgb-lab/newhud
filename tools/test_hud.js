@@ -79,11 +79,10 @@ check('5 ngjyrat ekzistojnë', ['#42ff68', '#ffd23f', '#ff7a2f', '#ff334d', '#b3
   Object.values(iso.survivalPalette()).includes(c)), JSON.stringify(iso.survivalPalette()));
 check('thresholds: caution 80 / warning 55 / critical 20',
   iso.cfg.survivalCautionThreshold === 80 && iso.cfg.survivalWarningThreshold === 55 && iso.cfg.survivalCriticalThreshold === 20);
-check('FX dramatike default ON', iso.cfg.survivalHeartbeat && iso.cfg.survivalGlowPulse && iso.cfg.survivalRedFlash &&
-  iso.cfg.survivalVerdictOn && iso.cfg.survivalCriticalGlitch);
+check('FX dramatike default ON', iso.cfg.survivalHeartbeat && iso.cfg.survivalGlowPulse && iso.cfg.survivalCriticalGlitch);
 check('vignette e vjetër u hoq krejt', !HTML.includes('pf-vignette') && !JS.includes('survivalVignette'));
 check('zëri default = both', iso.cfg.survivalSoundMode === 'both');
-check('mbetet vetëm flash (pa popup mbi ekran)', !!q('.pf-flash') && !q('.pf-impact') && !!q('.pf-survival-aura'));
+check('s’ka ma flash të kuq as popup mbi ekran', !q('.pf-flash') && !q('.pf-impact') && !!q('.pf-survival-aura'));
 check('s’ka ma overlay GAME OVER mbi lojën', !JSON.stringify(HTML).includes('pf-gameover'));
 check('popup-i i madh “-%” u hoq krejt', !HTML.includes('pf-impact') && !JS.includes('triggerImpactPopup') &&
   !JS.includes('survivalImpactPopup'));
@@ -93,7 +92,7 @@ console.log('\n— statusi sipas % —');
 function setChance(v) { iso.cfg.items[iso.selected].survivalChance = v; iso.survival.displayValue = v; $rootScope.$digest(); }
 const cases = [[100, 'STEADY', 'safe', '#42ff68'], [70, 'CAREFUL', 'caution', '#ffd23f'],
                [40, 'DANGER', 'danger', '#ff7a2f'], [12, 'CRITICAL', 'critical', '#ff334d'],
-               [0, 'TOTALED', 'dead', '#b3122b']];
+               [0, 'RUN OVER', 'dead', '#b3122b']];
 iso.cfg.survivalStatusBlend = false;   // ndryshim i menjehershem -> ngjyra e sakte e nivelit
 for (const [v, phrase, key, color] of cases) {
   setChance(v);
@@ -109,18 +108,31 @@ check('blend: 70% del midis safe dhe caution', blended !== '#ffd23f' && blended 
 setChance(80);
 check('blend: 80% = ngjyra safe', iso.survivalColor().toLowerCase() === '#42ff68', iso.survivalColor());
 
-console.log('\n— VULA (verdict) + flash —');
+console.log('\n— v5.3.2: pa elemente kuqe (flash + vulë u hoqën) —');
 setChance(100); $rootScope.$digest();
 setChance(0); $rootScope.$digest();
-try { $timeout.flush(30); } catch (e) {}   // animacioni rifillon pas ~8ms
-check('vula u aktivizua në 0%', iso.survival.verdictShow === true);
-check('vula shfaqet brenda HUD-it', txt('.pf-survival-verdict') === 'TOTALED', txt('.pf-survival-verdict'));
-check('vula është brenda .pf-survival', !!q('.pf-survival .pf-survival-verdict'));
-iso.cfg.survivalVerdictText = 'CAR DESTROYED'; $rootScope.$digest();
-check('teksti i vulës është i editueshëm', txt('.pf-survival-verdict') === 'CAR DESTROYED', txt('.pf-survival-verdict'));
-iso.cfg.survivalVerdictText = 'TOTALED';
-$timeout.flush(5000);
-check('vula fshihet vetë', iso.survival.verdictShow === false);
+try { $timeout.flush(30); } catch (e) {}
+check('s’ka ma element flash në DOM', !q('.pf-flash') && !HTML.includes('pf-flash'));
+check('s’ka ma vulë në DOM', !q('.pf-survival-verdict') && !HTML.includes('survival-verdict'));
+check('s’ka ma triggerVerdict/triggerSurvivalFlash', !JS.includes('triggerVerdict') && !JS.includes('triggerSurvivalFlash'));
+check('s’ka ma flash/vula në config', iso.cfg.survivalRedFlash === undefined && iso.cfg.survivalVerdictOn === undefined &&
+  iso.cfg.survivalVerdictText === undefined && iso.cfg.survivalVerdictMs === undefined);
+check('në 0% mbetet vetëm përqindja + statusi', iso.survival.verdictShow === undefined &&
+  txt('.pf-survival-status') === 'RUN OVER', txt('.pf-survival-status'));
+
+console.log('\n— v5.3.2: frazat e reja (pa WRECKED/SKILL ISSUE/PRAY/SEND IT) —');
+const BAD = /WRECKED|SKILL ISSUE|SEND IT|PRAY|DOOMED|COOKED|GAME OVER/;
+const PACKSRC = (JS.match(/var SURVIVAL_PACKS = \{[\s\S]*?\n      \};/) || [''])[0];
+check('asnjë fjalë e papëlqyer në paketat e frazave', !BAD.test(PACKSRC), PACKSRC.slice(0, 90));
+iso.setSurvivalPack('dramatic'); setChance(0); $rootScope.$digest();
+check('dramatic 0% → RUN OVER', iso.survivalStatus() === 'RUN OVER', iso.survivalStatus());
+iso.setSurvivalPack('streamer'); $rootScope.$digest();
+const strPhrases = [100,70,40,12,0].map(v => { setChance(v); return iso.survivalStatus(); });
+check('streamer: fraza të reja', strPhrases.every(p => !BAD.test(p)) && strPhrases[4] === "THAT'S IT", strPhrases.join(' | '));
+iso.setSurvivalPack('hardcore'); $rootScope.$digest();
+const hcPhrases = [100,70,40,12,0].map(v => { setChance(v); return iso.survivalStatus(); });
+check('hardcore: fraza të reja', hcPhrases[3] === 'HOLD ON' && hcPhrases[4] === "IT'S OVER", hcPhrases.join(' | '));
+iso.setSurvivalPack('dramatic'); $rootScope.$digest();
 
 console.log('\n— emoji (bug-u 💀 u rregullua) —');
 const emojiCases = [[100, '😎'], [70, '😬'], [40, '😰'], [12, '😵'], [0, '💀']];
@@ -138,7 +150,7 @@ check('hardcore 40% → OUCH', iso.survivalStatus() === 'OUCH', iso.survivalStat
 iso.setSurvivalPack('streamer'); setChance(12); $rootScope.$digest();
 check('streamer 12% → ONE HP', iso.survivalStatus() === 'ONE HP', iso.survivalStatus());
 iso.setSurvivalPack('streamer'); setChance(0); $rootScope.$digest();
-check('streamer 0% → WRECKED', iso.survivalStatus() === 'WRECKED', iso.survivalStatus());
+check("streamer 0% → THAT'S IT", iso.survivalStatus() === "THAT'S IT", iso.survivalStatus());
 iso.setSurvivalPack('classic'); setChance(70); $rootScope.$digest();
 check('classic 70% → CAUTION', iso.survivalStatus() === 'CAUTION', iso.survivalStatus());
 iso.setSurvivalPack('dramatic'); $rootScope.$digest();
@@ -146,9 +158,10 @@ check('dramatic 70% → CAREFUL', iso.survivalStatus() === 'CAREFUL', iso.surviv
 
 console.log('\n— rrotullimi i frazave —');
 iso.cfg.survivalStatusRotate = true; iso.restartSurvivalRotation();
+try { $timeout.flush(3200); } catch (e) {}   // konsumo timerat e mbetur
 iso.survival.rotIndex = 0; $rootScope.$digest();
 const first = iso.survivalStatus();
-$timeout.flush(3100);
+$timeout.flush(3200);
 const second = iso.survivalStatus();
 check(`fraza u rrotullua (${first} → ${second})`, first !== second);
 iso.cfg.survivalStatusRotate = false; iso.restartSurvivalRotation();
@@ -214,7 +227,8 @@ const saved = JSON.parse(global.localStorage.getItem('pfhud_config_v14_working_u
 check('config u ruajt me v5.2 fushat',
   typeof saved.survivalStatusPack === 'string' && saved.survivalTextFx === 'none' &&
   saved.survivalCautionColor === '#ffd23f' && saved.survivalSoundMode === 'both' && saved.survivalHeartbeat === true &&
-  saved.survivalFontFamily === 'bangers' && saved.survivalVerdictText === 'TOTALED' && saved.survivalGlowPulse === true,
+  saved.survivalFontFamily === 'bangers' && saved.survivalGlowPulse === true &&
+  saved.survivalVerdictText === undefined,
   JSON.stringify({ pack: saved.survivalStatusPack, fx: saved.survivalTextFx, caution: saved.survivalCautionColor }));
 check('fushat __raw nuk ruhen', !Object.keys(saved).some(k => k.includes('__raw')));
 
@@ -222,7 +236,7 @@ check('fushat __raw nuk ruhen', !Object.keys(saved).some(k => k.includes('__raw'
 // v5.3.0 — versioni, toast, diagnostika
 // =====================================================================
 console.log('\n— v5.3.0: versioni & diagnostika —');
-check('versioni shfaqet në HUD', iso.modVersion === '5.3.1', iso.modVersion);
+check('versioni shfaqet në HUD', iso.modVersion === '5.3.2', iso.modVersion);
 check('badge-i i versionit në panel', HTML.includes('pf-version') && HTML.includes('v{{modVersion}}'));
 check('toast-i i ngarkimit ekziston', HTML.includes('pf-toast') && typeof iso.showToast === 'function');
 iso.showToast(); $timeout.flush(20);
@@ -232,7 +246,7 @@ check('toast-i është JASHTË panelit (duket edhe i mbyllur)', (function() {
   if (!t) return false;
   return !t.closest('.pf-panel');
 })(), 'toast brenda panelit');
-check('toast-i shfaq versionin', /5\.3\.1/.test(txt('.pf-toast') || ''), txt('.pf-toast'));
+check('toast-i shfaq versionin', /5\.3\.2/.test(txt('.pf-toast') || ''), txt('.pf-toast'));
 $timeout.flush(6500);
 check('toast-i mbyllet vetë', iso.toast.show === false);
 check('tab-i DIAGNOSTIKA ekziston', HTML.includes('DIAGNOSTIKA') && HTML.includes('runDiagnostics'));
@@ -306,13 +320,16 @@ check('threshold i kujdesit u shtua', scope2.cfg.survivalCautionThreshold === 80
 check('cilësimet e vjetra u ruajtën', scope2.cfg.survivalSize === 72 && scope2.cfg.survivalValueColor === '#00ff00',
   `${scope2.cfg.survivalSize} / ${scope2.cfg.survivalValueColor}`);
 check('FX-ja dramatike u ndez automatikisht',
-  scope2.cfg.survivalHeartbeat && scope2.cfg.survivalRedFlash && scope2.cfg.survivalVerdictOn && scope2.cfg.survivalGlowPulse);
+  scope2.cfg.survivalHeartbeat && scope2.cfg.survivalGlowPulse && scope2.cfg.survivalRedFlash === undefined);
 check('zëri u ndez automatikisht', scope2.cfg.survivalSoundMode === 'both');
 check('fonti u migrua futura → bangers', scope2.cfg.survivalFontFamily === 'bangers', scope2.cfg.survivalFontFamily);
 check('pesha/italic u rregulluan për Bangers',
   scope2.cfg.survivalFontWeight === '400' && scope2.cfg.survivalItalic === false);
 check('vignette u hoq, aureola u ndez', scope2.cfg.survivalGlowPulse === true && scope2.cfg.survivalVignette === undefined);
-check('vula zëvendësoi GAME OVER', scope2.cfg.survivalVerdictOn === true && scope2.cfg.survivalVerdictText === 'TOTALED');
+check('vula/flash u hoqën krejt nga config-i i vjetër',
+  scope2.cfg.survivalVerdictOn === undefined && scope2.cfg.survivalVerdictText === undefined && scope2.cfg.survivalRedFlash === undefined);
+check('fraza e vjetër WRECKED nuk kthehet (Custom → RUN OVER)',
+  scope2.cfg.survivalStatusTexts.dead === 'RUN OVER', scope2.cfg.survivalStatusTexts.dead);
 check('emoji-t e reja u shtuan', scope2.cfg.survivalEmojiSafe === '😎' && scope2.cfg.survivalEmojiDead === '💀');
 check('emoji i saktë edhe pas migrimit', (function(){ scope2.cfg.items[scope2.selected].survivalChance = 100;
   scope2.survival.displayValue = 100; $rootScope.$digest(); return scope2.survivalEmojiText() === '😎'; })());

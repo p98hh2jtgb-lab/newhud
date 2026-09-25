@@ -38,7 +38,7 @@ angular.module('beamng.apps')
       // v5.3.0 — Versioni shfaqet brenda HUD-it, që të shihet
       // menjëherë nëse BeamNG ka ngarkuar versionin e re.
       // =====================================================
-      var MOD_VERSION = '5.3.1';
+      var MOD_VERSION = '5.3.2';
       scope.modVersion = MOD_VERSION;
       scope.storageKey = STORAGE_KEY;
       scope.toast = { show: false };
@@ -309,7 +309,7 @@ angular.module('beamng.apps')
 
           // ---- v5.2: STATUSI DRAMATIK, 5 NGJYRA, FX & ZË ----
           survivalStatusPack: 'dramatic',   // classic | dramatic | streamer | hardcore | custom
-          survivalStatusTexts: { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'WRECKED' },
+          survivalStatusTexts: { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'RUN OVER' },
           survivalStatusRotate: true,       // rrotullo frazat brenda te njejtit nivel
           survivalRotateMs: 3000,
           survivalStatusBlend: true,        // true = ngjyrat kalojne bute, false = ndryshim i menjëhershem
@@ -321,10 +321,6 @@ angular.module('beamng.apps')
           survivalHeartbeatAmount: 55,
           survivalGlowPulse: true,          // v5.2.1: aureola dramatike rreth HUD-it (jo ekran i kuq)
           survivalGlowAmount: 55,
-          survivalRedFlash: true,           // flash i kuq kur kalon ne rrezik/kritik
-          survivalVerdictOn: true,          // v5.2.1: vula "TOTALED" brenda HUD-it kur arrin 0%
-          survivalVerdictText: 'TOTALED',
-          survivalVerdictMs: 3000,
           survivalCriticalGlitch: true,     // glitch kur je ne kritik
           survivalSoundMode: 'both',        // off | heartbeat | alerts | both
           survivalSoundVolume: 0.25,     // v5.3.1: ma i bute
@@ -555,7 +551,9 @@ angular.module('beamng.apps')
 
         // ---- v5.2 migration: statusi dramatik, 5 ngjyra, FX, ze, stream ----
         if (!cfg.survivalStatusPack) cfg.survivalStatusPack = 'dramatic';
-        var DEF_TEXTS = { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'WRECKED' };
+        var DEF_TEXTS = { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'RUN OVER' };
+        // v5.3.2: fjalët që s'pëlqyen nuk kthehen ma kurrë (edhe në tekstin Custom)
+        var OLD_WORDS = /^(WRECKED|SKILL ISSUE|SEND IT|PRAY|DOOMED|GAME OVER|ALMOST WRECKED|COOKED|GG)$/;
         var savedStatusVersion = saved ? Number(saved.survivalStatusProfileVersion || 0) : 0;
         var savedFontVersion = saved ? Number(saved.survivalFontProfileVersion || 0) : 0;
         if (!cfg.survivalStatusTexts || typeof cfg.survivalStatusTexts !== 'object') cfg.survivalStatusTexts = angular.extend({}, DEF_TEXTS);
@@ -579,10 +577,17 @@ angular.module('beamng.apps')
         if (cfg.survivalHeartbeatAmount == null) cfg.survivalHeartbeatAmount = 55;
         if (cfg.survivalGlowPulse == null) cfg.survivalGlowPulse = true;
         if (cfg.survivalGlowAmount == null) cfg.survivalGlowAmount = 55;
-        if (cfg.survivalRedFlash == null) cfg.survivalRedFlash = true;
-        if (cfg.survivalVerdictOn == null) cfg.survivalVerdictOn = (saved && saved.survivalGameOver === false) ? false : true;
-        if (!cfg.survivalVerdictText || cfg.survivalVerdictText === 'GAME OVER') cfg.survivalVerdictText = 'TOTALED';
-        if (cfg.survivalVerdictMs == null) cfg.survivalVerdictMs = 3000;
+        // ---- v5.3.2: flash i kuq + vula “TOTALED” u hoqën KREJT ----
+        delete cfg.survivalRedFlash;
+        delete cfg.survivalVerdictOn;
+        delete cfg.survivalVerdictText;
+        delete cfg.survivalVerdictMs;
+        if (cfg.survivalStatusTexts) {
+          ['safe','caution','danger','critical','dead'].forEach(function(k) {
+            var v = cfg.survivalStatusTexts[k];
+            if (typeof v === 'string' && OLD_WORDS.test(v.trim().toUpperCase())) cfg.survivalStatusTexts[k] = DEF_TEXTS[k];
+          });
+        }
         if (cfg.survivalCriticalGlitch == null) cfg.survivalCriticalGlitch = true;
         if (!cfg.survivalSoundMode) cfg.survivalSoundMode = 'both';
         if (cfg.survivalSoundVolume == null) cfg.survivalSoundVolume = 0.35;
@@ -1064,8 +1069,7 @@ angular.module('beamng.apps')
         pulse:false, shake:false, rolling:false, emojiPulse:false, oldValue:100, displayValue:100,
         visible:true, deltaVisible:false, deltaText:'',
         // ---- v5.2 ----
-        rotIndex:0, stateKey:'safe', flash:false, flashBig:false,
-        verdictShow:false, auraOpacity:0, userFontLoaded:false
+        rotIndex:0, stateKey:'safe', auraOpacity:0, userFontLoaded:false
       };
       var survivalPulseTimer = null;
       var survivalDeltaTimer = null;
@@ -1077,8 +1081,6 @@ angular.module('beamng.apps')
       var unwatchSurvivalEmoji = null;
       // ---- v5.2 timerat ----
       var survivalRotateTimer = null;
-      var survivalFlashTimer = null;
-      var survivalVerdictTimer = null;
       var unwatchSurvivalState = null;
 
       // Lightweight 30 FPS number tween. New telemetry continues from the current
@@ -1486,19 +1488,19 @@ angular.module('beamng.apps')
           safe: ['STEADY', 'ALL GOOD', 'SMOOTH'],
           caution: ['CAREFUL', 'TENSE', 'GETTING RISKY'],
           danger: ['DANGER', 'ONE MORE HIT', 'BACK OFF'],
-          critical: ['CRITICAL', 'ONE HIT AWAY', 'ALMOST WRECKED'],
-          dead: ['TOTALED', 'WRECKED', 'GAME OVER']
+          critical: ['CRITICAL', 'ONE HIT AWAY', "DON'T BLINK"],
+          dead: ['RUN OVER', 'END OF THE ROAD', 'BACK TO THE GARAGE']
         },
         streamer: {
-          safe: ["WE'RE GOOD", 'CHILL', 'CLEAN RUN'],
-          caution: ['UH OH', 'GETTING SUS', 'CAREFUL NOW'],
+          safe: ["WE'RE GOOD", 'CHILL', 'CRUISING'],
+          caution: ['UH OH', 'GETTING SPICY', 'CAREFUL NOW'],
           danger: ['OH NO', 'ONE MORE HIT', 'BACK OFF'],
-          critical: ['ONE HP', 'COOKED', 'GG'],
-          dead: ['WRECKED', 'SKILL ISSUE', 'SEND IT']
+          critical: ['ONE HP', 'HANDS SHAKING', "DON'T BLINK"],
+          dead: ["THAT'S IT", 'END OF THE ROAD', 'RUN OVER']
         },
         hardcore: {
           safe: ['OK'], caution: ['HMM'], danger: ['OUCH'],
-          critical: ['PRAY'], dead: ['DOOMED']
+          critical: ['HOLD ON'], dead: ["IT'S OVER"]
         }
       };
       scope.survivalPackNames = ['classic', 'dramatic', 'streamer', 'hardcore'];
@@ -1598,12 +1600,7 @@ angular.module('beamng.apps')
 
         var worse = (STATE_ORDER[now] || 0) > (STATE_ORDER[before] || 0);
 
-        if (worse && scope.cfg.survivalRedFlash && (now === 'critical' || now === 'dead')) {
-          triggerSurvivalFlash(now === 'dead');
-        }
         if (worse) survivalSoundAlert(now, before);
-
-        if (now === 'dead' && scope.cfg.survivalVerdictOn !== false) triggerVerdict();
 
         if (scope.cfg.survivalEmojiPop !== false && !scope.survival.emojiPulse) {
           if (survivalEmojiTimer) { try { $timeout.cancel(survivalEmojiTimer); } catch (e) {} }
@@ -1787,30 +1784,7 @@ angular.module('beamng.apps')
       }
       scope.refreshSurvivalDrama = refreshSurvivalDrama;
 
-      function triggerSurvivalFlash(big) {
-        if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch (e) {} }
-        scope.survival.flash = false;
-        scope.survival.flashBig = big === true;
-        $timeout(function() {
-          scope.survival.flash = true;
-          survivalFlashTimer = $timeout(function() { scope.survival.flash = false; }, big ? 620 : 420);
-        }, 8);
-      }
-      scope.triggerSurvivalFlash = triggerSurvivalFlash;
-
-      function triggerVerdict() {
-        if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch (e) {} }
-        var ms = Math.max(1200, Math.min(8000, Number(scope.cfg.survivalVerdictMs) || 3000));
-        if (scope.survival.verdictShow) {
-          // ishte hapur -> fike/ndize qe animacioni te rifilloje
-          scope.survival.verdictShow = false;
-          $timeout(function() { scope.survival.verdictShow = true; }, 8);
-        } else {
-          scope.survival.verdictShow = true;
-        }
-        survivalVerdictTimer = $timeout(function() { scope.survival.verdictShow = false; }, ms + 12);
-      }
-      scope.triggerVerdict = triggerVerdict;
+      // v5.3.2: funksionet e flash-it të kuq dhe të vulës “TOTALED” u hoqën krejt.
 
       // =====================================================
       // v5.2 — ZË (Web Audio; pa file ekstra, pa instalim)
@@ -1999,14 +1973,6 @@ angular.module('beamng.apps')
         animateSurvivalDisplay(next);
         showSurvivalDelta(old - next, old);
         scope.persist();
-      };
-
-      // Testojeni vulen "TOTALED" pa e shkaterruar makinen.
-      scope.testGameOver = function() { scope.testVerdict(); };
-
-      scope.testVerdict = function() {
-        scope.cfg.survivalVerdictOn = true;
-        triggerVerdict();
       };
 
       scope.startSurvivalDrag = function(evt) {
@@ -2983,8 +2949,6 @@ angular.module('beamng.apps')
         if (unwatchSurvivalState) { try { unwatchSurvivalState(); } catch(e) {} }
         if (toastTimer) { try { $timeout.cancel(toastTimer); } catch(e) {} }
         if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch(e) {} }
-        if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch(e) {} }
-        if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch(e) {} }
         if (sound.hbTimer) { try { clearTimeout(sound.hbTimer); } catch(e) {} sound.hbTimer = null; }
         try { if (sound.ctx && sound.ctx.close) sound.ctx.close(); } catch(e) {}
         try {

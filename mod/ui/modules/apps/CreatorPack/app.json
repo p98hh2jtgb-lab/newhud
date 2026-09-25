@@ -1,8 +1,8 @@
 {
   "name": "HUD PRO — Damage Ring",
   "author": "daimy",
-  "version": "5.3.1",
-  "description": "HUD PRO v5.3.1 - your own font loader, no glow, label same size as %, discreet -X%, no center popup, softer sound.",
+  "version": "5.3.2",
+  "description": "HUD PRO v5.3.2 - no red flash and no \"TOTALED\" stamp at all; new cooler status phrases (RUN OVER / END OF THE ROAD / BACK TO THE GARAGE / DON'T BLINK / HOLD ON); own font, no glow, label = %, discreet -X%.",
   "directive": "creatorpackPanel",
   "domElement": "<creatorpack-panel></creatorpack-panel>",
   "css": {
