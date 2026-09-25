@@ -31,13 +31,17 @@
     background:radial-gradient(60% 60% at 50% 45%, rgba(255,255,255,.10), transparent 70%);border-radius:40%}
   #stageTag{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.16em;color:#5d6a80;text-transform:uppercase}
   #stageHint{position:absolute;left:14px;bottom:12px;font-size:11px;color:#4f5b6e;max-width:52%}
+  #streamBadge{display:none;position:absolute;right:14px;top:12px;z-index:12;cursor:pointer;
+    background:rgba(120,0,0,.55);border:1px solid rgba(255,90,90,.6);color:#ffd9d9;border-radius:999px;
+    padding:7px 13px;font-size:11.5px;letter-spacing:.06em;font-family:inherit}
+  body.stream #streamBadge{display:block}
 
   /* ---------- WIDGETI (i njejti stil si ne mod) ---------- */
   .pf-survival{
     position:absolute; z-index:7; display:flex; flex-direction:column; align-items:center; gap:.12em;
     white-space:nowrap; pointer-events:none; user-select:none; transform:translate(-50%,-50%);
     filter:drop-shadow(0 4px 10px rgba(0,0,0,.72));
-    font-family:'Futura Extra Bold','Futura','Century Gothic','Segoe UI',Arial,sans-serif;
+    font-family:'Bangers HUD','Bangers',Impact,'Arial Black',sans-serif;
     font-style:italic; line-height:1; color:#42ff68;
   }
   .pf-survival-main{position:relative;display:flex;align-items:baseline;justify-content:center;gap:.34em}
@@ -61,7 +65,7 @@
   .pf-uppercase .pf-survival-value,.pf-uppercase .pf-survival-status,.pf-uppercase .pf-survival-label{text-transform:uppercase}
 
   /* ---------- FX ---------- */
-  .fx-neon .pf-survival-value,.fx-neon .pf-survival-status{text-shadow:0 0 .06em #fff,0 0 .18em currentColor,0 0 .42em currentColor,0 0 .9em currentColor}
+  .fx-neon .pf-survival-value,.fx-neon .pf-survival-status{text-shadow:0 0 .05em #fff,0 0 .16em currentColor,0 0 .40em currentColor,0 0 .85em currentColor}
   .fx-chrome .pf-survival-value,.fx-chrome .pf-survival-status{
     background:linear-gradient(180deg,#ffffff 0%,#dfe8f2 16%,#8e9cad 37%,#ffffff 49%,#5c6875 61%,#c3ced9 76%,#f6faff 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1.2px rgba(0,0,0,.55);
@@ -102,7 +106,7 @@
   @keyframes shk{0%,100%{transform:translate(-50%,-50%)}20%{transform:translate(calc(-50% - 5px),-50%)}
     45%{transform:translate(calc(-50% + 4px),-50%)}70%{transform:translate(calc(-50% - 2px),-50%)}}
   .impact-text{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:74px;font-weight:950;
-    font-family:'Futura Extra Bold','Segoe UI',Arial,sans-serif;color:#fff;text-shadow:0 0 24px rgba(255,40,40,.9);
+    font-family:'Bangers HUD','Bangers',Impact,sans-serif;color:#fff;text-shadow:0 0 24px rgba(255,40,40,.9);
     pointer-events:none;animation:imp 900ms ease-out forwards}
   @keyframes imp{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
     100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
@@ -111,6 +115,12 @@
   #vignette{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s ease;
     background:radial-gradient(120% 90% at 50% 50%, transparent 38%, rgba(120,0,0,.28) 70%, rgba(160,0,0,.72) 100%)}
   #flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:rgba(255,30,30,.42)}
+  #gameover{position:absolute;left:0;right:0;top:34%;z-index:8;text-align:center;pointer-events:none;display:none;
+    font-family:'Bangers HUD','Bangers',Impact,sans-serif;font-size:min(15vw,150px);line-height:1;color:#fff;letter-spacing:.03em;
+    -webkit-text-stroke:3px rgba(0,0,0,.58);text-shadow:0 0 34px rgba(255,0,30,.9),0 10px 26px rgba(0,0,0,.85)}
+  #gameover.show{display:block;animation:go 4.5s ease-out forwards}
+  @keyframes go{0%{opacity:0;transform:scale(2.6)}12%{opacity:1;transform:scale(1)}18%{transform:scale(1.06)}
+    24%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
   #flash.go{animation:fl 460ms ease-out}
   @keyframes fl{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
 
@@ -164,8 +174,10 @@
   <div id="game"></div>
   <div class="ghost-car"></div>
   <div id="stageTag">Simulim i lojës — jo HUD i vërtetë</div>
+  <button id="streamBadge">● STREAM MODE ON — kliko për me dalë</button>
   <div id="vignette"></div>
   <div id="flash"></div>
+  <div id="gameover">GAME OVER</div>
 
   <div class="pf-survival" id="sv">
     <div class="pf-survival-main">
@@ -186,7 +198,7 @@
 
 <aside id="panel">
   <h1>HUD PRO · Survival Lab</h1>
-  <div class="sub">Provo lirshëm. Kur t'pëlqejë një kombinim, shtyp <b>KOPJO JSON</b> dhe ma dërgo — e fus direkt në mod.</div>
+  <div class="sub">Pasqyra e HUD PRO <b>v5.2</b>: Bangers i ngulitur, paketat angleze, 5 ngjyra, FX dramatike, zë dhe GAME OVER — saktësisht si në mod.</div>
 
   <div class="sec">
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Simulimi <span>▾</span></h2>
@@ -207,11 +219,10 @@
     <div class="body">
       <div class="row"><label>Fonti</label>
         <select id="font" style="width:180px">
-          <option value="futura">Futura Extra Bold (i ngulitur)</option>
+          <option value="bangers">Bangers (i ngulitur)</option>
           <option value="narrow">Arial Narrow (i vjetri)</option>
-          <option value="segoe">Segoe UI Black (Windows)</option>
-          <option value="arialblack">Arial Black (Windows)</option>
           <option value="impact">Impact (Windows)</option>
+          <option value="arialblack">Arial Black (Windows)</option>
         </select></div>
       <div class="row"><label>Madhësia</label><input type="range" id="size" min="28" max="110" value="54"><span class="val" id="sizeOut">54px</span></div>
       <div class="row"><label>Pesha</label><input type="range" id="weight" min="400" max="950" step="50" value="900"><span class="val" id="weightOut">900</span></div>
@@ -219,7 +230,7 @@
       <div class="row"><label>Skew</label><input type="range" id="skew" min="-20" max="20" value="0"><span class="val" id="skewOut">0°</span></div>
       <div class="row"><label>Italic</label><input type="checkbox" id="italic" checked></div>
       <div class="row"><label>UPPERCASE</label><input type="checkbox" id="upper" checked></div>
-      <div class="note">Futura Extra Bold është i ngulitur në mod (Jost Heavy, SIL OFL) — punon pa instalim. Të tjerët janë fonte sistemi të Windows-it.</div>
+      <div class="note">Bangers (SIL OFL) është i ngulitur në mod si base64 — punon offline, pa instalim. Të tjerët janë fonte sistemi të Windows-it.</div>
     </div>
   </div>
 
@@ -244,18 +255,17 @@
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Tekstet e statusit (paketat) <span>▾</span></h2>
     <div class="body">
       <div class="chips" id="packChips">
-        <button class="btn on" data-pack="classic">Classic</button>
-        <button class="btn" data-pack="hollywood">Dramatik</button>
+        <button class="btn" data-pack="classic">Classic</button>
+        <button class="btn on" data-pack="dramatic">Dramatic</button>
         <button class="btn" data-pack="streamer">Streamer</button>
-        <button class="btn" data-pack="albanian">Shqip</button>
         <button class="btn" data-pack="hardcore">Hardcore</button>
         <button class="btn" data-pack="custom">Custom</button>
       </div>
-      <div class="mini-in"><span>Sigurt</span><input type="color" id="cSafe" value="#42ff68"><input type="text" id="tSafe" value="SAFE"></div>
-      <div class="mini-in"><span>Kujdes</span><input type="color" id="cCaution" value="#ffd23f"><input type="text" id="tCaution" value="CAUTION"></div>
-      <div class="mini-in"><span>Rrezik</span><input type="color" id="cDanger" value="#ff7a2f"><input type="text" id="tDanger" value="DANGER"></div>
-      <div class="mini-in"><span>Kritik</span><input type="color" id="cCritical" value="#ff334d"><input type="text" id="tCritical" value="CRITICAL"></div>
-      <div class="mini-in"><span>Fundi</span><input type="color" id="cDead" value="#b3122b"><input type="text" id="tDead" value="NO CHANCE"></div>
+      <div class="mini-in"><span>Sigurt</span><input type="color" id="cSafe" value="#42ff68"><input type="text" id="tSafe" value="STEADY"></div>
+      <div class="mini-in"><span>Kujdes</span><input type="color" id="cCaution" value="#ffd23f"><input type="text" id="tCaution" value="TENSE"></div>
+      <div class="mini-in"><span>Rrezik</span><input type="color" id="cDanger" value="#ff7a2f"><input type="text" id="tDanger" value="IN PERIL"></div>
+      <div class="mini-in"><span>Kritik</span><input type="color" id="cCritical" value="#ff334d"><input type="text" id="tCritical" value="LAST BREATH"></div>
+      <div class="mini-in"><span>Fundi</span><input type="color" id="cDead" value="#b3122b"><input type="text" id="tDead" value="WRECKED"></div>
       <label class="chk"><input type="checkbox" id="rotate"> Rrotullo frazat (ndryshon çdo 3s)</label>
       <label class="chk"><input type="checkbox" id="blend" checked> Ngjyra kalojnë butësisht midis statuseve</label>
       <div class="note">Paketa “Dramatik” ka shumë fraza për çdo nivel — me rrotullim jep më shumë dramë.</div>
@@ -265,9 +275,9 @@
   <div class="sec">
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Kufijtë (thresholds) &amp; Emoji <span>▾</span></h2>
     <div class="body">
-      <div class="row"><label>Sigurt deri në…</label><input type="range" id="thCaution" min="20" max="95" value="80"><span class="val" id="thCautionOut">80</span></div>
-      <div class="row"><label>Kujdes deri në…</label><input type="range" id="thDanger" min="10" max="90" value="55"><span class="val" id="thDangerOut">55</span></div>
-      <div class="row"><label>Rrezik deri në…</label><input type="range" id="thCritical" min="1" max="60" value="20"><span class="val" id="thCriticalOut">20</span></div>
+      <div class="row"><label>Sigurt mbi…</label><input type="range" id="thCaution" min="20" max="99" value="80"><span class="val" id="thCautionOut">80</span></div>
+      <div class="row"><label>Rrezik nën…</label><input type="range" id="thDanger" min="10" max="95" value="55"><span class="val" id="thDangerOut">55</span></div>
+      <div class="row"><label>Kritik nën…</label><input type="range" id="thCritical" min="1" max="60" value="20"><span class="val" id="thCriticalOut">20</span></div>
       <div class="row" style="margin-top:8px"><label>Emoji automatik</label><input type="checkbox" id="emojiOn" checked></div>
       <div class="grid3" style="margin-top:6px">
         <input type="text" class="short" id="eSafe" value="😎">
@@ -296,14 +306,38 @@
   </div>
 
   <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">ZËRI (si në mod) <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Modaliteti</label>
+        <select id="soundMode" style="width:150px">
+          <option value="off">Off</option>
+          <option value="heartbeat">Heartbeat</option>
+          <option value="alerts">Alerts</option>
+          <option value="both" selected>Both</option>
+        </select></div>
+      <div class="row"><label>Volumi</label><input type="range" id="soundVol" min="0" max="100" value="35"><span class="val" id="soundVolOut">35%</span></div>
+      <div class="row"><label>Nis nën</label><input type="range" id="soundBelow" min="5" max="99" value="60"><span class="val" id="soundBelowOut">60%</span></div>
+      <div class="grid2" style="margin-top:6px">
+        <button class="btn acc" id="btnSoundTest">▶ Testo zërin</button>
+        <button class="btn" id="btnStream">● STREAM MODE</button>
+      </div>
+      <div class="chips" style="margin-top:8px">
+        <button class="btn" id="btnGoTest">Testo GAME OVER</button>
+        <button class="btn" id="btnBigHit">💥 -34%</button>
+      </div>
+      <div class="note">Kliko një herë në faqe (gest i përdoruesit) që browseri ta lejojë zërin. Zëri gjenerohet live — pa file audio.</div>
+    </div>
+  </div>
+
+  <div class="sec">
     <h2 onclick="this.parentNode.classList.toggle('collapsed')">Presetet <span>▾</span></h2>
     <div class="body">
       <div class="grid3">
         <button class="btn" data-preset="pro">Pro / Clean</button>
-        <button class="btn acc" data-preset="hollywood">Hollywood</button>
+        <button class="btn acc" data-preset="dramatic">Dramatic</button>
         <button class="btn" data-preset="streamer">Streamer</button>
         <button class="btn" data-preset="hardcore">Hardcore</button>
-        <button class="btn" data-preset="shqip">Shqip</button>
+        <button class="btn" data-preset="blood">Blood</button>
         <button class="btn" data-preset="arcade">Arcade</button>
       </div>
     </div>
@@ -329,7 +363,7 @@
   /* ============ paketat e teksteve ============ */
   var PACKS = {
     classic:{safe:["SAFE"],caution:["CAUTION"],danger:["DANGER"],critical:["CRITICAL"],dead:["NO CHANCE"]},
-    hollywood:{
+    dramatic:{
       safe:["STEADY","HOLDING","ALL GOOD"],
       caution:["TENSE","ON EDGE","SHAKY"],
       danger:["IN PERIL","ONE MORE HIT","DON'T PUSH IT"],
@@ -338,17 +372,10 @@
     },
     streamer:{
       safe:["WE'RE GOOD","CHILL","EZ"],
-      caution:["UH OH","HMMMM","SUS"],
+      caution:["UH OH","HMMM","SUS"],
       danger:["OH NO","IT'S COOKING","NOT GREAT"],
       critical:["GG","COOKED","ONE HP"],
       dead:["SKILL ISSUE","R.I.P.","SEND IT"]
-    },
-    albanian:{
-      safe:["SIGURT","MIRE","S'KA GJO"],
-      caution:["KUJDES","KOKEN","MASA"],
-      danger:["RREZIK","MOS E NGUJ","AAAH"],
-      critical:["KRITIK","PER FUND","FUNDI AFER"],
-      dead:["KAQ KISH","U SHKATERROVE","LOJA MBAROI"]
     },
     hardcore:{
       safe:["OK"],caution:["HMM"],danger:["OUCH"],critical:["PRAY"],dead:["DOOMED"]
@@ -358,14 +385,15 @@
   var COLORS = {safe:"#42ff68",caution:"#ffd23f",danger:"#ff7a2f",critical:"#ff334d",dead:"#b3122b"};
 
   var DEFAULTS = {
-    value:100, font:"futura", size:54, weight:900, track:-0.055, skew:0, italic:true, upper:true,
-    fx:"none", pack:"classic", theta:80, thd:55, thc:20,
-    tSafe:"SAFE", tCaution:"CAUTION", tDanger:"DANGER", tCritical:"CRITICAL", tDead:"NO CHANCE",
+    value:100, font:"bangers", size:54, weight:900, track:0, skew:0, italic:false, upper:true,
+    fx:"none", pack:"dramatic", theta:80, thd:55, thc:20,
+    tSafe:"STEADY", tCaution:"TENSE", tDanger:"IN PERIL", tCritical:"LAST BREATH", tDead:"WRECKED",
     cSafe:"#42ff68", cCaution:"#ffd23f", cDanger:"#ff7a2f", cCritical:"#ff334d", cDead:"#b3122b",
     eSafe:"😎", eCaution:"😬", eDanger:"😰", eCritical:"😵", eDead:"💀",
-    emojiOn:true, rotate:false, blend:true, heartbeat:true, hbAmt:55, vignetteOn:true, vigAmt:70,
+    emojiOn:true, rotate:true, blend:true, heartbeat:true, hbAmt:55, vignetteOn:true, vigAmt:70,
     shakeOn:true, flashOn:true, pulseOn:true, statusPulse:true, meter:true, labelOn:true,
-    statusSize:0.30, statusSpacing:0.14, statusWeight:900, bg:"none", posX:50, posY:26
+    statusSize:0.30, statusSpacing:0.14, statusWeight:900, bg:"none", posX:50, posY:26,
+    soundMode:"both", soundVol:35, soundBelow:60, gameOver:true, goText:"GAME OVER"
   };
   var S = Object.assign({}, DEFAULTS);
 
@@ -409,13 +437,26 @@
   }
 
   /* ============ render ============ */
+  /* ============ STATUSI / GAME OVER ============ */
+  var ST_ORDER = {safe:0,caution:1,danger:2,critical:3,dead:4};
+  var lastKey = null, goTimer = null;
+  function renderGameOver(key){
+    var el = $("gameover");
+    if (key === "dead" && lastKey !== "dead" && S.gameOver){
+      el.textContent = S.goText || "GAME OVER";
+      el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+      if (goTimer) clearTimeout(goTimer);
+      goTimer = setTimeout(function(){ el.classList.remove("show"); }, 4600);
+    }
+    lastKey = key;
+  }
+
   function render(){
     var v = Math.max(0, Math.min(100, display));
     var st = stateOf(v), col = colorOf(v);
 
-    var fam = {futura:"'Futura Extra Bold','Futura','Century Gothic','Segoe UI',Arial,sans-serif",
+    var fam = {bangers:"'Bangers HUD','Bangers',Impact,'Arial Black',sans-serif",
                narrow:"'Arial Narrow','Segoe UI',Arial,sans-serif",
-               segoe:"'Segoe UI Black','Segoe UI',system-ui,sans-serif",
                arialblack:"'Arial Black',Arial,sans-serif",
                impact:"Impact,'Haettenschweiler','Arial Narrow Bold',sans-serif"}[S.font];
 
@@ -466,9 +507,13 @@
     }
     $("vignette").style.opacity = vig.toFixed(3);
 
-    if (st !== lastState && lastState !== null && S.flashOn && (st === "critical" || st === "dead")){
-      var fl = $("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+    if (st !== lastState && lastState !== null){
+      if (S.flashOn && (st === "critical" || st === "dead")){
+        var fl = $("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+      }
+      if (ST_ORDER[st] > (ST_ORDER[lastState] || 0)) soundAlert(st);
     }
+    if (st !== lastKey) renderGameOver(st);
     lastState = st;
     puffJSON();
   }
@@ -559,8 +604,92 @@
 
   $("simSpeed").addEventListener("input", function(){ target = parseFloat(this.value); $("valOut").textContent = Math.round(target); });
 
+  /* ============ ZËRI (Web Audio, si në mod) ============ */
+  var sound = {ctx:null, hbTimer:null};
+  function audioCtx(){
+    try{
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      if (!sound.ctx) sound.ctx = new C();
+      if (sound.ctx.state === "suspended" && sound.ctx.resume) sound.ctx.resume();
+      return sound.ctx;
+    }catch(e){ return null; }
+  }
+  function sndWants(what){ var m = S.soundMode || "off"; return m !== "off" && (m === "both" || m === what); }
+  function sndVol(){ return Math.max(0, Math.min(1, (Number(S.soundVol) || 0) / 100)); }
+  function thump(vol, freq){
+    var ctx = audioCtx(); if (!ctx) return;
+    try{
+      var t = ctx.currentTime, f = freq || 76, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = "sine"; osc.frequency.setValueAtTime(f, t);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(24, f * 0.45), t + 0.16);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+      osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t + 0.24);
+    }catch(e){}
+  }
+  function beep(freq, vol, dur, type){
+    var ctx = audioCtx(); if (!ctx) return;
+    try{
+      var t = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = type || "square"; osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.15));
+      osc.connect(g); g.connect(ctx.destination); osc.start(t); osc.stop(t + (dur || 0.15) + 0.03);
+    }catch(e){}
+  }
+  function crashNoise(vol){
+    var ctx = audioCtx(); if (!ctx) return;
+    try{
+      var len = Math.floor(ctx.sampleRate * 0.30), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0), n;
+      for (n = 0; n < len; n++) d[n] = (Math.random() * 2 - 1) * Math.pow(1 - n / len, 2.4);
+      var src = ctx.createBufferSource(); src.buffer = buf;
+      var flt = ctx.createBiquadFilter(); flt.type = "lowpass"; flt.frequency.value = 850;
+      var g = ctx.createGain(); g.gain.value = Math.max(0.0001, vol);
+      src.connect(flt); flt.connect(g); g.connect(ctx.destination); src.start();
+    }catch(e){}
+  }
+  function soundAlert(key){
+    if (!sndWants("alerts")) return;
+    var vol = sndVol();
+    if (key === "dead"){ beep(120, vol * 0.85, 0.9, "sawtooth"); setTimeout(function(){ beep(88, vol * 0.85, 1.1, "sawtooth"); }, 190); }
+    else if (key === "critical"){ beep(880, vol * 0.45, 0.12); setTimeout(function(){ beep(660, vol * 0.45, 0.16); }, 150); }
+    else if (key === "danger"){ beep(520, vol * 0.35, 0.10); }
+  }
+  function hbPeriod(v){
+    var below = S.soundBelow || 60, t = Math.max(0, Math.min(1, (below - v) / Math.max(1, below)));
+    return (1.25 - 0.85 * t) * 1000;
+  }
+  function hbVolume(v){
+    var below = S.soundBelow || 60, t = Math.max(0, Math.min(1, (below - v) / Math.max(1, below)));
+    return sndVol() * (0.35 + 0.65 * t);
+  }
+  function heartbeatLoop(){
+    sound.hbTimer = null;
+    if (!sndWants("heartbeat")) return;
+    var v = Math.max(0, Math.min(100, display));
+    if (v < (S.soundBelow || 60)){
+      var vol = hbVolume(v);
+      thump(vol, 76); setTimeout(function(){ thump(vol * 0.72, 60); }, 165);
+    }
+    sound.hbTimer = setTimeout(heartbeatLoop, hbPeriod(v));
+  }
+  function startSound(){
+    if (sound.hbTimer){ clearTimeout(sound.hbTimer); sound.hbTimer = null; }
+    if (!sndWants("heartbeat")) return;
+    sound.hbTimer = setTimeout(heartbeatLoop, 500);
+  }
+  function testSound(){
+    var vol = sndVol();
+    thump(vol, 76); setTimeout(function(){ thump(vol * 0.72, 60); }, 165);
+    setTimeout(function(){ crashNoise(vol * 0.5); }, 520);
+    setTimeout(function(){ beep(880, vol * 0.45, 0.12); }, 900);
+  }
+
   function hit(amount){
     target = Math.max(0, target - amount);
+    if (sndWants("alerts") && amount >= 8) crashNoise(sndVol() * 0.55);
     $("simSpeed").value = target; $("valOut").textContent = Math.round(target);
     if (S.shakeOn){ sv.classList.remove("shake"); void sv.offsetWidth; sv.classList.add("shake"); }
     if (S.pulseOn){ sv.classList.remove("pulse-on"); void sv.offsetWidth; sv.classList.add("pulse-on"); }
@@ -569,6 +698,25 @@
     document.getElementById("stage").appendChild(t); setTimeout(function(){ t.remove(); }, 900);
     render();
   }
+  $("soundMode").addEventListener("change", function(){ S.soundMode = this.value; startSound(); });
+  $("soundVol").addEventListener("input", function(){ S.soundVol = parseFloat(this.value); $("soundVolOut").textContent = Math.round(S.soundVol) + "%"; });
+  $("soundBelow").addEventListener("input", function(){ S.soundBelow = parseFloat(this.value); $("soundBelowOut").textContent = Math.round(S.soundBelow) + "%"; });
+  $("btnSoundTest").addEventListener("click", testSound);
+  $("btnGoTest").addEventListener("click", function(){
+    display = 0; target = 0; $("simSpeed").value = 0; $("valOut").textContent = 0;
+    lastKey = null; render();
+  });
+  $("btnBigHit").addEventListener("click", function(){ hit(34); });
+  function toggleStream(){
+    document.body.classList.toggle("stream");
+    var on = document.body.classList.contains("stream");
+    $("btnStream").classList.toggle("on", on);
+    $("panel").style.display = on ? "none" : "";
+    $("stageHint").style.display = on ? "none" : "";
+  }
+  $("btnStream").addEventListener("click", toggleStream);
+  $("streamBadge").addEventListener("click", toggleStream);
+
   $("btnCrash").addEventListener("click", function(){ hit(28 + Math.random() * 34); });
   $("btnSmallHit").addEventListener("click", function(){ hit(7 + Math.random() * 12); });
   $("btnRepair").addEventListener("click", function(){
@@ -577,19 +725,19 @@
 
   /* ============ presetet ============ */
   var PRESETS = {
-    pro:      {font:"futura",size:54,weight:900,track:-0.055,skew:0,italic:true,upper:true,fx:"none",pack:"classic",
+    pro:      {font:"bangers",size:54,weight:900,track:0.0,skew:0,italic:false,upper:true,fx:"none",pack:"classic",
                heartbeat:false,vignetteOn:false,shakeOn:false,flashOn:false,blend:true,meter:false,emojiOn:true,
                cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b"},
-    hollywood:{font:"futura",size:62,weight:900,track:0.02,skew:-4,italic:true,upper:true,fx:"chrome",pack:"hollywood",
+    dramatic:{font:"bangers",size:62,weight:900,track:0.02,skew:0,italic:false,upper:true,fx:"chrome",pack:"dramatic",
                heartbeat:true,hbAmt:60,vignetteOn:true,vigAmt:75,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:false,
                cSafe:"#e8f4ff",cCaution:"#ffd23f",cDanger:"#ff8a2f",cCritical:"#ff2233",cDead:"#8c0f18",rotate:true},
-    streamer: {font:"segoe",size:58,weight:900,track:-0.02,skew:0,italic:false,upper:true,fx:"glitch",pack:"streamer",
+    streamer: {font:"bangers",size:58,weight:900,track:0.01,skew:0,italic:false,upper:true,fx:"glitch",pack:"streamer",
                heartbeat:true,hbAmt:45,vignetteOn:true,vigAmt:55,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
                cSafe:"#7dff9b",cCaution:"#ffe14d",cDanger:"#ff8a1e",cCritical:"#ff2d55",cDead:"#7a0b1c",rotate:true},
-    hardcore: {font:"futura",size:66,weight:950,track:0.06,skew:0,italic:false,upper:true,fx:"blood",pack:"hardcore",
+    hardcore: {font:"bangers",size:66,weight:950,track:0.06,skew:0,italic:false,upper:true,fx:"glitch",pack:"hardcore",
                heartbeat:true,hbAmt:80,vignetteOn:true,vigAmt:90,shakeOn:true,flashOn:true,blend:false,meter:false,emojiOn:false,
                cSafe:"#e9eef3",cCaution:"#ffb347",cDanger:"#ff4423",cCritical:"#e00028",cDead:"#5c0007",rotate:false},
-    shqip:    {font:"futura",size:56,weight:900,track:0.0,skew:-3,italic:true,upper:true,fx:"neon",pack:"albanian",
+    blood:    {font:"bangers",size:60,weight:900,track:0.01,skew:0,italic:false,upper:true,fx:"blood",pack:"dramatic",
                heartbeat:true,hbAmt:55,vignetteOn:true,vigAmt:65,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
                cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b",rotate:false},
     arcade:   {font:"impact",size:64,weight:900,track:0.03,skew:0,italic:false,upper:true,fx:"extrude",pack:"streamer",
@@ -638,9 +786,10 @@
   });
 
   /* start */
-  setPack("classic");
+  setPack("dramatic");
   render();
   requestAnimationFrame(tick);
+  startSound();
 })();
 </script>
 </body>

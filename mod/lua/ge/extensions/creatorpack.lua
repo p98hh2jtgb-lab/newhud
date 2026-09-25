@@ -45,6 +45,10 @@ local function pfhudToggleGuides() trigger('toggleGuides') end
 -- Shtesa v5.1: ON/OFF i rrumullakateve te makinave (vetem Survival Chance ne ekran)
 local function pfhudToggleVehicles() trigger('toggleVehicles') end
 
+-- Shtesa v5.2: stream mode (fsheh panelin + rrumullakat + guidat) dhe reset i survival-it
+local function pfhudToggleStream()  trigger('toggleStream')  end
+local function pfhudResetSurvival() trigger('resetSurvival') end
+
 -- =====================================================
 -- Perputhshmeri me strukturen origjinale te CreatorPack
 -- =====================================================

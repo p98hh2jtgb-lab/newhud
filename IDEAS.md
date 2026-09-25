@@ -1,4 +1,8 @@
-# HUD PRO — ide për v5.2 (Survival Chance)
+# HUD PRO — ide & roadmap
+
+> **v5.2 u realizua** (Bangers, paketat angleze, 5 ngjyrat, FX dramatike, zë, STREAM MODE, GAME OVER).
+> Detajet: `CHANGELOG.md`. Poshtë mbetet lista e ideve për **v5.3**.
+
 
 > Kjo është ajo që propozoj pasi e lexova modin v5.1.
 > Provo gjithçka live në **Survival Lab** (preview në browser) dhe pastaj më thua çka mbetet.

@@ -156,6 +156,31 @@ angular.module('beamng.apps')
           survivalSpeedWeight: 1.0,
           survivalMinAlive: 1,
 
+          // ---- v5.2: STATUSI DRAMATIK, 5 NGJYRA, FX & ZË ----
+          survivalStatusPack: 'dramatic',   // classic | dramatic | streamer | hardcore | custom
+          survivalStatusTexts: { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'WRECKED' },
+          survivalStatusRotate: true,       // rrotullo frazat brenda te njejtit nivel
+          survivalRotateMs: 3000,
+          survivalStatusBlend: true,        // true = ngjyrat kalojne bute, false = ndryshim i menjëhershem
+          survivalCautionColor: '#ffd23f',
+          survivalDeadColor: '#b3122b',
+          survivalCautionThreshold: 80,
+          survivalTextFx: 'none',           // none | neon | chrome | gold | blood | extrude | glitch | flicker
+          survivalHeartbeat: true,          // HUD-i pulson si zemra, shpejtohet kur bie %
+          survivalHeartbeatAmount: 55,
+          survivalVignette: true,           // skajet e ekranit skuqen
+          survivalVignetteAmount: 70,
+          survivalRedFlash: true,           // flash i kuq kur kalon ne rrezik/kritik
+          survivalImpactPopup: true,        // teksti i madh "💥 -18%" ne pende
+          survivalGameOver: true,           // ekran GAME OVER kur arrin 0%
+          survivalGameOverText: 'GAME OVER',
+          survivalCriticalGlitch: true,     // glitch kur je ne kritik
+          survivalSoundMode: 'both',        // off | heartbeat | alerts | both
+          survivalSoundVolume: 0.35,
+          survivalSoundBelow: 60,           // zeri fillon nen kete %
+          streamMode: false,                // v5.2: fsheh panelin, rrumullakat dhe guidat me nje tast
+          streamPrev: null,
+
           // ---- v2.1: GUIDAT PER SHORTS (9:16) ----
           guidesOn: false,         // shfaq kornizen e sigurt + vijat e mesit
           guideRatio: '9:16',      // 9:16 | 4:5 | 1:1 | 16:9
@@ -374,6 +399,48 @@ angular.module('beamng.apps')
         if (cfg.survivalSpeedWeight == null) cfg.survivalSpeedWeight = 1.0;
         if (cfg.survivalMinAlive == null) cfg.survivalMinAlive = 1;
 
+        // ---- v5.2 migration: statusi dramatik, 5 ngjyra, FX, ze, stream ----
+        if (!cfg.survivalStatusPack) cfg.survivalStatusPack = 'dramatic';
+        var DEF_TEXTS = { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'WRECKED' };
+        var savedStatusVersion = saved ? Number(saved.survivalStatusProfileVersion || 0) : 0;
+        if (!cfg.survivalStatusTexts || typeof cfg.survivalStatusTexts !== 'object') cfg.survivalStatusTexts = angular.extend({}, DEF_TEXTS);
+        ['safe','caution','danger','critical','dead'].forEach(function(k) {
+          if (!cfg.survivalStatusTexts[k]) cfg.survivalStatusTexts[k] = DEF_TEXTS[k];
+        });
+        if (cfg.survivalStatusRotate == null) cfg.survivalStatusRotate = true;
+        if (cfg.survivalRotateMs == null) cfg.survivalRotateMs = 3000;
+        if (cfg.survivalStatusBlend == null) cfg.survivalStatusBlend = true;
+        if (!cfg.survivalCautionColor) cfg.survivalCautionColor = '#ffd23f';
+        if (!cfg.survivalDeadColor) cfg.survivalDeadColor = '#b3122b';
+        if (cfg.survivalCautionThreshold == null) cfg.survivalCautionThreshold = 80;
+        // v5.1 ruante vetem 3 ngjyra: safe/warning/critical. Ruaj ato si parazgjedhje te reja.
+        if (savedStatusVersion < 1) {
+          cfg.survivalCautionColor = cfg.survivalCautionColor || '#ffd23f';
+          cfg.survivalDeadColor = cfg.survivalDeadColor || '#b3122b';
+          cfg.survivalStatusProfileVersion = 1;
+        }
+        if (!cfg.survivalTextFx) cfg.survivalTextFx = 'none';
+        if (cfg.survivalHeartbeat == null) cfg.survivalHeartbeat = true;
+        if (cfg.survivalHeartbeatAmount == null) cfg.survivalHeartbeatAmount = 55;
+        if (cfg.survivalVignette == null) cfg.survivalVignette = true;
+        if (cfg.survivalVignetteAmount == null) cfg.survivalVignetteAmount = 70;
+        if (cfg.survivalRedFlash == null) cfg.survivalRedFlash = true;
+        if (cfg.survivalImpactPopup == null) cfg.survivalImpactPopup = true;
+        if (cfg.survivalGameOver == null) cfg.survivalGameOver = true;
+        if (!cfg.survivalGameOverText) cfg.survivalGameOverText = 'GAME OVER';
+        if (cfg.survivalCriticalGlitch == null) cfg.survivalCriticalGlitch = true;
+        if (!cfg.survivalSoundMode) cfg.survivalSoundMode = 'both';
+        if (cfg.survivalSoundVolume == null) cfg.survivalSoundVolume = 0.35;
+        if (cfg.survivalSoundBelow == null) cfg.survivalSoundBelow = 60;
+        if (cfg.streamMode == null) cfg.streamMode = false;
+
+        // v5.1: Survival Chance duket ma dramatic si parazgjedhje
+        if (savedStatusVersion < 1) {
+          cfg.survivalImpactShake = true;
+          cfg.survivalLowPulse = true;
+          cfg.survivalShowStatus = true;
+        }
+
         // ---- v2.1 guides ----
         if (cfg.guidesOn === undefined || cfg.guidesOn === null) cfg.guidesOn = false;
         if (!cfg.guideRatio) cfg.guideRatio = '9:16';
@@ -388,6 +455,7 @@ angular.module('beamng.apps')
         cfg.prevKey = 'PageUp';
         cfg.resetKey = 'g';
         cfg.togglePanelKey = 'h';
+        if (!cfg.streamKey) cfg.streamKey = 'b';
 
         angular.forEach(cfg.items, function(item, idx) {
           if (item.enabled === undefined) item.enabled = true;
@@ -813,7 +881,13 @@ angular.module('beamng.apps')
       var followTimer = null;
 
       // v4.3 Survival Chance animation state
-      scope.survival = { pulse:false, shake:false, rolling:false, emojiPulse:false, oldValue:100, displayValue:100, visible:true, deltaVisible:false, deltaText:'' };
+      scope.survival = {
+        pulse:false, shake:false, rolling:false, emojiPulse:false, oldValue:100, displayValue:100,
+        visible:true, deltaVisible:false, deltaText:'',
+        // ---- v5.2 ----
+        rotIndex:0, stateKey:'safe', flash:false, flashBig:false,
+        impactText:'', impactShow:false, gameOverShow:false
+      };
       var survivalPulseTimer = null;
       var survivalDeltaTimer = null;
       var survivalHideTimer = null;
@@ -822,6 +896,13 @@ angular.module('beamng.apps')
       var survivalTweenTimer = null;
       var survivalEmojiTimer = null;
       var unwatchSurvivalEmoji = null;
+      // ---- v5.2 timerat ----
+      var survivalRotateTimer = null;
+      var survivalImpactTimer = null;
+      var survivalFlashTimer = null;
+      var survivalGameOverTimer = null;
+      var survivalVignetteTimer = null;
+      var unwatchSurvivalState = null;
 
       // Lightweight 30 FPS number tween. New telemetry continues from the current
       // visual value instead of restarting/jumping every 0.25 seconds.
@@ -837,18 +918,29 @@ angular.module('beamng.apps')
           var t = Math.min(1, (Date.now() - began) / duration);
           var eased = 1 - Math.pow(1 - t, 3);
           scope.survival.displayValue = start + (target - start) * eased;
+          refreshSurvivalDrama();
           if (t < 1) survivalTweenTimer = $timeout(frame, 33);
-          else { scope.survival.displayValue = target; survivalTweenTimer = null; }
+          else { scope.survival.displayValue = target; survivalTweenTimer = null; refreshSurvivalDrama(); }
         }
         frame();
       }
 
-      function syncSurvivalDisplay() {
+      syncSurvivalDisplay();
+
+      // v5.2: nis rrahjen, rrotullimin e frazave dhe ze rin ne sfond
+            function syncSurvivalDisplay() {
         var it = scope.cfg.items[scope.selected];
         var v = it ? Number(it.survivalChance) : 100;
         scope.survival.displayValue = isFinite(v) ? Math.max(0, Math.min(100, v)) : 100;
       }
       syncSurvivalDisplay();
+
+      // v5.2: nis rrahjen, rrotullimin e frazave dhe ze rin ne sfond
+      $timeout(function() {
+        refreshSurvivalDrama();
+        restartSurvivalRotation();
+        startSurvivalSound();
+      }, 400);
 
       function showSurvivalDelta(drop, oldValue) {
         var decimals = Math.max(0, Math.min(1, Number(scope.cfg.survivalDecimals) || 0));
@@ -879,6 +971,13 @@ angular.module('beamng.apps')
           survivalShakeTimer = $timeout(function() { scope.survival.shake = false; }, 430);
           survivalDeltaTimer = $timeout(function() { scope.survival.deltaVisible = false; },
             Math.max(300, Number(scope.cfg.survivalDeltaDuration) || 850));
+
+          // ---- v5.2: popup i madh + ze + flash i vogel ----
+          if (drop >= minDrop) {
+            if (scope.cfg.survivalImpactPopup) triggerImpactPopup('-' + drop.toFixed(decimals) + '%');
+            survivalSoundAlert(null, null, drop);
+          }
+          refreshSurvivalDrama();
         }, 12);
 
         if (scope.cfg.survivalDisplayMode === 'change') {
@@ -1151,27 +1250,131 @@ angular.module('beamng.apps')
         return Math.max(0, Math.min(100, v)).toFixed(decimals);
       };
 
-      scope.survivalColor = function() {
-        var value = scope.survivalVisualValue();
-        var safe = scope.cfg.survivalValueColor || '#42ff68';
-        if (!scope.cfg.survivalDynamicColor) return safe;
-        var critical = Math.max(1, Math.min(100, Number(scope.cfg.survivalCriticalThreshold) || 20));
-        var warning = Math.max(critical + 1, Math.min(100, Number(scope.cfg.survivalWarningThreshold) || 55));
-        var warningColor = scope.cfg.survivalWarningColor || '#ff7a2f';
-        var criticalColor = scope.cfg.survivalCriticalColor || '#ff334d';
-        if (value > warning) return safe; // SAFE/high chance stays vivid green
-        if (value > critical) return mixHex(safe, warningColor, (warning-value)/Math.max(1,warning-critical));
-        return mixHex(warningColor, criticalColor, (critical-value)/Math.max(1,critical));
+      // =====================================================
+      // v5.2 — 5 NGJYRA (safe / caution / danger / critical / dead)
+      // =====================================================
+      scope.survivalStateKey = function() {
+        var v = scope.survivalVisualValue();
+        if (v <= 0) return 'dead';
+        if (v <= Number(scope.cfg.survivalCriticalThreshold || 20)) return 'critical';
+        if (v <= Number(scope.cfg.survivalWarningThreshold || 55)) return 'danger';
+        if (v <= Number(scope.cfg.survivalCautionThreshold || 80)) return 'caution';
+        return 'safe';
       };
 
-      scope.survivalStatus = function() {
-        var v = scope.survivalVisualValue();
-        if (v <= 0) return 'NO CHANCE';
-        if (v <= Number(scope.cfg.survivalCriticalThreshold || 20)) return 'CRITICAL';
-        if (v <= Number(scope.cfg.survivalWarningThreshold || 55)) return 'DANGER';
-        if (v <= 80) return 'CAUTION';
-        return 'SAFE';
+      function survivalThresholds() {
+        var c = Math.max(1, Math.min(99, Number(scope.cfg.survivalCautionThreshold) || 80));
+        var w = Math.max(1, Math.min(98, Number(scope.cfg.survivalWarningThreshold) || 55));
+        var k = Math.max(1, Math.min(97, Number(scope.cfg.survivalCriticalThreshold) || 20));
+        if (w >= c) w = c - 1;
+        if (k >= w) k = Math.max(1, w - 1);
+        return { caution: c, warning: w, critical: k };
+      }
+
+      scope.survivalPalette = function() {
+        return {
+          safe: scope.cfg.survivalValueColor || '#42ff68',
+          caution: scope.cfg.survivalCautionColor || '#ffd23f',
+          danger: scope.cfg.survivalWarningColor || '#ff7a2f',
+          critical: scope.cfg.survivalCriticalColor || '#ff334d',
+          dead: scope.cfg.survivalDeadColor || '#b3122b'
+        };
       };
+
+      scope.survivalColor = function() {
+        var v = scope.survivalVisualValue();
+        var pal = scope.survivalPalette();
+        if (!scope.cfg.survivalDynamicColor) return pal.safe;
+        if (!scope.cfg.survivalStatusBlend) return pal[scope.survivalStateKey()] || pal.safe;
+        var t = survivalThresholds();
+        if (v >= t.caution) return pal.safe;
+        if (v <= 0) return pal.dead;
+        if (v >= t.warning) return mixHex(pal.caution, pal.safe, (v - t.warning) / Math.max(1, t.caution - t.warning));
+        if (v >= t.critical) return mixHex(pal.danger, pal.caution, (v - t.critical) / Math.max(1, t.warning - t.critical));
+        return mixHex(pal.critical, pal.danger, Math.max(0, v) / Math.max(1, t.critical));
+      };
+
+      // =====================================================
+      // v5.2 — STATUSI DRAMATIK (paketa frazash, anglisht)
+      // =====================================================
+      var SURVIVAL_PACKS = {
+        classic: {
+          safe: ['SAFE'], caution: ['CAUTION'], danger: ['DANGER'],
+          critical: ['CRITICAL'], dead: ['NO CHANCE']
+        },
+        dramatic: {
+          safe: ['STEADY', 'HOLDING', 'ALL GOOD'],
+          caution: ['TENSE', 'ON EDGE', 'SHAKY'],
+          danger: ['IN PERIL', 'ONE MORE HIT', "DON'T PUSH IT"],
+          critical: ['LAST BREATH', 'BARELY ALIVE', 'CRITICAL'],
+          dead: ['WRECKED', 'GAME OVER', "IT'S OVER"]
+        },
+        streamer: {
+          safe: ["WE'RE GOOD", 'CHILL', 'EZ'],
+          caution: ['UH OH', 'HMMM', 'SUS'],
+          danger: ['OH NO', "IT'S COOKING", 'NOT GREAT'],
+          critical: ['GG', 'COOKED', 'ONE HP'],
+          dead: ['SKILL ISSUE', 'R.I.P.', 'SEND IT']
+        },
+        hardcore: {
+          safe: ['OK'], caution: ['HMM'], danger: ['OUCH'],
+          critical: ['PRAY'], dead: ['DOOMED']
+        }
+      };
+      scope.survivalPackNames = ['classic', 'dramatic', 'streamer', 'hardcore'];
+
+      scope.survivalStatus = function() {
+        var key = scope.survivalStateKey();
+        var pack = scope.cfg.survivalStatusPack || 'dramatic';
+        if (pack === 'custom') {
+          var texts = scope.cfg.survivalStatusTexts || {};
+          return String(texts[key] || (SURVIVAL_PACKS.dramatic[key] || ['SAFE'])[0]).toUpperCase();
+        }
+        var set = SURVIVAL_PACKS[pack] || SURVIVAL_PACKS.dramatic;
+        var list = set[key] || ['SAFE'];
+        var idx = Math.abs(Math.floor(Number(scope.survival.rotIndex) || 0)) % list.length;
+        return list[idx];
+      };
+
+      scope.setSurvivalPack = function(name) {
+        scope.cfg.survivalStatusPack = name;
+        scope.survival.rotIndex = 0;
+        restartSurvivalRotation();
+        scope.persist();
+      };
+
+      // Kur perdoruesi shkruan tekst vetjak, kalo automatikisht ne paketen Custom.
+      scope.survivalCustomEdit = function() {
+        if (scope.cfg.survivalStatusPack !== 'custom') scope.cfg.survivalStatusPack = 'custom';
+        scope.survival.rotIndex = 0;
+        restartSurvivalRotation();
+        scope.persist();
+      };
+
+      function packHasRotation() {
+        var pack = scope.cfg.survivalStatusPack || 'dramatic';
+        if (pack === 'custom') return false;
+        var set = SURVIVAL_PACKS[pack] || SURVIVAL_PACKS.dramatic;
+        var max = 0;
+        ['safe','caution','danger','critical','dead'].forEach(function(k) {
+          max = Math.max(max, (set[k] || []).length);
+        });
+        return max > 1;
+      }
+
+      function restartSurvivalRotation() {
+        if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch (e) {} survivalRotateTimer = null; }
+        if (!scope.cfg.survivalStatusRotate || !packHasRotation()) return;
+        var every = Math.max(800, Math.min(15000, Number(scope.cfg.survivalRotateMs) || 3000));
+        function step() {
+          survivalRotateTimer = $timeout(function() {
+            scope.survival.rotIndex = (Number(scope.survival.rotIndex) || 0) + 1;
+            step();
+          }, every);
+        }
+        step();
+      }
+      scope.restartSurvivalRotation = restartSurvivalRotation;
 
       scope.survivalEmojiText = function() {
         var status = scope.survivalStatus();
@@ -1196,15 +1399,35 @@ angular.module('beamng.apps')
         };
       };
 
-      // Pop only when SAFE/CAUTION/DANGER/CRITICAL/NO CHANCE actually changes.
-      unwatchSurvivalEmoji = scope.$watch(function(){ return scope.survivalStatus(); }, function(now, before) {
-        if (!before || now === before || scope.cfg.survivalEmojiPop === false) return;
-        if (survivalEmojiTimer) { try { $timeout.cancel(survivalEmojiTimer); } catch(e) {} }
-        scope.survival.emojiPulse = false;
-        $timeout(function(){
-          scope.survival.emojiPulse = true;
-          survivalEmojiTimer = $timeout(function(){ scope.survival.emojiPulse = false; }, 520);
-        }, 10);
+      // =====================================================
+      // v5.2 — kur ndryshon NIVELI (jo fjala): pop, flash, ze, game over
+      // =====================================================
+      var STATE_ORDER = { safe: 0, caution: 1, danger: 2, critical: 3, dead: 4 };
+
+      unwatchSurvivalState = scope.$watch(function() { return scope.survivalStateKey(); }, function(now, before) {
+        scope.survival.stateKey = now;
+        if (!before || now === before) return;
+
+        // niveli i re fillon gjithmone nga fraza e pare
+        scope.survival.rotIndex = 0;
+
+        var worse = (STATE_ORDER[now] || 0) > (STATE_ORDER[before] || 0);
+
+        if (worse && scope.cfg.survivalRedFlash && (now === 'critical' || now === 'dead')) {
+          triggerSurvivalFlash(now === 'dead');
+        }
+        if (worse) survivalSoundAlert(now, before);
+
+        if (now === 'dead' && scope.cfg.survivalGameOver) triggerGameOver();
+
+        if (scope.cfg.survivalEmojiPop !== false && !scope.survival.emojiPulse) {
+          if (survivalEmojiTimer) { try { $timeout.cancel(survivalEmojiTimer); } catch (e) {} }
+          scope.survival.emojiPulse = false;
+          $timeout(function() {
+            scope.survival.emojiPulse = true;
+            survivalEmojiTimer = $timeout(function() { scope.survival.emojiPulse = false; }, 520);
+          }, 10);
+        }
       });
 
       scope.survivalVisible = function() {
@@ -1257,6 +1480,14 @@ angular.module('beamng.apps')
         cls['impact-shake'] = scope.survival.shake;
         cls['low-pulse'] = scope.cfg.survivalLowPulse !== false && scope.survivalRawValue() <= Number(scope.cfg.survivalCriticalThreshold || 20);
         cls['edit-position'] = scope.cfg.survivalEditPosition;
+        // ---- v5.2: FX teksti, rrahje zemre, glitch ----
+        cls['fx-' + (scope.cfg.survivalTextFx || 'none')] = true;
+        cls['font-impact'] = scope.cfg.survivalFontFamily === 'impact';
+        cls['font-arialblack'] = scope.cfg.survivalFontFamily === 'arialblack';
+        var key = scope.survivalStateKey();
+        cls['heartbeat'] = scope.cfg.survivalHeartbeat === true && scope.survivalRawValue() < Number(scope.cfg.survivalSoundBelow || 60) + 15;
+        cls['glitchy'] = scope.cfg.survivalCriticalGlitch !== false && (key === 'critical' || key === 'dead');
+        cls['is-dead'] = key === 'dead';
         return cls;
       };
 
@@ -1321,6 +1552,277 @@ angular.module('beamng.apps')
 
       scope.survivalMeterStyle = function() {
         return { width: Math.max(0, Math.min(100, scope.survivalVisualValue())) + '%', background: scope.survivalColor() };
+      };
+
+
+      // =====================================================
+      // v5.2 — DRAMA: flash, impact popup, GAME OVER, vignette, rrahje
+      // =====================================================
+      var survivalZone = null;
+      function survivalNode() {
+        if (!survivalZone && element && element[0] && element[0].querySelector) {
+          survivalZone = element[0].querySelector('.pf-survival');
+        }
+        return survivalZone;
+      }
+
+      // Rifreskon variablat CSS te HUD-it (rrahja, vignette) dhe opacitetin e skajeve.
+      function refreshSurvivalDrama() {
+        var v = scope.survivalRawValue();
+        var t = survivalThresholds();
+        var node = survivalNode();
+
+        // rrahja e zemres: sa me i ulet %, aq ma i shpejt e ma i forte
+        var tt = Math.max(0, Math.min(1, (t.caution - v) / Math.max(1, t.caution)));
+        var amt = Math.max(0, Math.min(100, Number(scope.cfg.survivalHeartbeatAmount) || 0)) / 100;
+        var period = 1.30 - 0.90 * tt;
+        if (node && node.style && node.style.setProperty) {
+          try {
+            node.style.setProperty('--hb', period.toFixed(2) + 's');
+            node.style.setProperty('--hb1', (1 + 0.055 * amt * (0.35 + tt)).toFixed(4));
+            node.style.setProperty('--hb2', (1 + 0.030 * amt * (0.35 + tt)).toFixed(4));
+          } catch (e) {}
+        }
+
+        // vignette e kuqe
+        var vig = 0;
+        if (scope.cfg.survivalVignette && v < t.caution) {
+          vig = ((t.caution - v) / Math.max(1, t.caution)) *
+                (Math.max(0, Math.min(100, Number(scope.cfg.survivalVignetteAmount) || 0)) / 100);
+        }
+        scope.survival.vigOpacity = Math.max(0, Math.min(0.92, vig));
+      }
+      scope.refreshSurvivalDrama = refreshSurvivalDrama;
+
+      scope.survivalVignetteStyle = function() {
+        return { opacity: Number(scope.survival.vigOpacity) || 0 };
+      };
+
+      function triggerSurvivalFlash(big) {
+        if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch (e) {} }
+        scope.survival.flash = false;
+        scope.survival.flashBig = big === true;
+        $timeout(function() {
+          scope.survival.flash = true;
+          survivalFlashTimer = $timeout(function() { scope.survival.flash = false; }, big ? 620 : 420);
+        }, 8);
+      }
+      scope.triggerSurvivalFlash = triggerSurvivalFlash;
+
+      function triggerImpactPopup(text) {
+        if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch (e) {} }
+        scope.survival.impactText = text;
+        scope.survival.impactShow = false;
+        $timeout(function() {
+          scope.survival.impactShow = true;
+          survivalImpactTimer = $timeout(function() { scope.survival.impactShow = false; }, 900);
+        }, 8);
+      }
+      scope.triggerImpactPopup = triggerImpactPopup;
+
+      function triggerGameOver() {
+        if (survivalGameOverTimer) { try { $timeout.cancel(survivalGameOverTimer); } catch (e) {} }
+        scope.survival.gameOverShow = true;
+        survivalGameOverTimer = $timeout(function() { scope.survival.gameOverShow = false; }, 4500);
+      }
+      scope.triggerGameOver = triggerGameOver;
+
+      // =====================================================
+      // v5.2 — ZË (Web Audio; pa file ekstra, pa instalim)
+      // =====================================================
+      var sound = { ctx:null, hbTimer:null, warned:false };
+
+      scope.survivalSoundOn = function() {
+        return (scope.cfg.survivalSoundMode || 'off') !== 'off';
+      };
+      function soundWants(what) {
+        var m = scope.cfg.survivalSoundMode || 'off';
+        if (m === 'off') return false;
+        if (m === 'both') return true;
+        return m === what;
+      }
+      function soundVolume() {
+        return Math.max(0, Math.min(1, Number(scope.cfg.survivalSoundVolume) || 0.35));
+      }
+
+      function audioCtx() {
+        try {
+          var C = window.AudioContext || window.webkitAudioContext;
+          if (!C) return null;
+          if (!sound.ctx) sound.ctx = new C();
+          if (sound.ctx.state === 'suspended' && sound.ctx.resume) sound.ctx.resume();
+          return sound.ctx;
+        } catch (e) { return null; }
+      }
+
+      function playThump(vol, freq) {
+        var ctx = audioCtx(); if (!ctx) return;
+        try {
+          var t = ctx.currentTime, f = freq || 76;
+          var osc = ctx.createOscillator(), gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, t);
+          osc.frequency.exponentialRampToValueAtTime(Math.max(24, f * 0.45), t + 0.16);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.20);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(t); osc.stop(t + 0.24);
+        } catch (e) {}
+      }
+
+      function playBeep(freq, vol, dur, type) {
+        var ctx = audioCtx(); if (!ctx) return;
+        try {
+          var t = ctx.currentTime;
+          var osc = ctx.createOscillator(), gain = ctx.createGain();
+          osc.type = type || 'square';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.0001, t);
+          gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.15));
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(t); osc.stop(t + (dur || 0.15) + 0.03);
+        } catch (e) {}
+      }
+
+      function playCrashNoise(vol) {
+        var ctx = audioCtx(); if (!ctx) return;
+        try {
+          var len = Math.floor(ctx.sampleRate * 0.30);
+          var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+          var data = buf.getChannelData(0), n;
+          for (n = 0; n < len; n++) data[n] = (Math.random() * 2 - 1) * Math.pow(1 - n / len, 2.4);
+          var src = ctx.createBufferSource(); src.buffer = buf;
+          var flt = ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 850;
+          var g = ctx.createGain(); g.gain.value = Math.max(0.0001, vol);
+          src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+          src.start();
+        } catch (e) {}
+      }
+
+      function heartbeatPeriod(v) {
+        var below = Math.max(5, Math.min(99, Number(scope.cfg.survivalSoundBelow) || 60));
+        var tt = Math.max(0, Math.min(1, (below - v) / Math.max(1, below)));
+        return (1.25 - 0.85 * tt) * 1000;
+      }
+      function heartbeatVolume(v) {
+        var below = Math.max(5, Math.min(99, Number(scope.cfg.survivalSoundBelow) || 60));
+        var tt = Math.max(0, Math.min(1, (below - v) / Math.max(1, below)));
+        return soundVolume() * (0.35 + 0.65 * tt);
+      }
+
+      function heartbeatLoop() {
+        sound.hbTimer = null;
+        if (!soundWants('heartbeat') || !scope.cfg.survivalOn) return;   // ndalon vet
+        var v = scope.survivalRawValue();
+        var below = Math.max(5, Math.min(99, Number(scope.cfg.survivalSoundBelow) || 60));
+        if (v < below && scope.survivalVisible()) {
+          var vol = heartbeatVolume(v);
+          playThump(vol, 76);
+          setTimeout(function() { playThump(vol * 0.72, 60); }, 165);
+        }
+        sound.hbTimer = setTimeout(heartbeatLoop, heartbeatPeriod(v));
+      }
+
+      function startSurvivalSound() {
+        if (sound.hbTimer) { try { clearTimeout(sound.hbTimer); } catch (e) {} sound.hbTimer = null; }
+        if (!soundWants('heartbeat')) return;
+        sound.hbTimer = setTimeout(heartbeatLoop, 500);
+      }
+      scope.startSurvivalSound = startSurvivalSound;
+
+      function survivalSoundAlert(nowKey, beforeKey, drop) {
+        if (!soundWants('alerts')) return;
+        var vol = soundVolume();
+        if (drop && drop >= 8) playCrashNoise(vol * 0.55);
+        if (nowKey === 'dead') {
+          playBeep(120, vol * 0.85, 0.9, 'sawtooth');
+          setTimeout(function() { playBeep(88, vol * 0.85, 1.1, 'sawtooth'); }, 190);
+        } else if (nowKey === 'critical' && beforeKey !== 'critical') {
+          playBeep(880, vol * 0.45, 0.12, 'square');
+          setTimeout(function() { playBeep(660, vol * 0.45, 0.16, 'square'); }, 150);
+        } else if (nowKey === 'danger' && beforeKey !== 'danger') {
+          playBeep(520, vol * 0.35, 0.10, 'square');
+        }
+      }
+
+      scope.toggleSurvivalSound = function() {
+        scope.cfg.survivalSoundMode = (scope.cfg.survivalSoundMode || 'off') === 'off' ? 'both' : 'off';
+        scope.persist();
+        startSurvivalSound();
+      };
+
+      scope.testSurvivalSound = function() {
+        var vol = soundVolume();
+        playThump(vol, 76);
+        setTimeout(function() { playThump(vol * 0.72, 60); }, 165);
+        setTimeout(function() { playCrashNoise(vol * 0.5); }, 520);
+        setTimeout(function() { playBeep(880, vol * 0.45, 0.12, 'square'); }, 900);
+      };
+
+      // Browseri kerkon nje veprim te perdoruesit para se te leshoje ze.
+      function resumeAudioOnGesture() {
+        try {
+          if (!scope.survivalSoundOn()) return;
+          var ctx = audioCtx();
+          if (ctx && ctx.state === 'running') {
+            $document.off('mousedown', resumeAudioOnGesture);
+            $document.off('keydown', resumeAudioOnGesture);
+          }
+        } catch (e) {}
+      }
+      $document.on('mousedown', resumeAudioOnGesture);
+      $document.on('keydown', resumeAudioOnGesture);
+
+      // =====================================================
+      // v5.2 — STREAM MODE (nje tast: fsheh panelin, rrumullakat, guidat)
+      // =====================================================
+      scope.streamModeOn = function() { return scope.cfg.streamMode === true; };
+
+      scope.toggleStreamMode = function() {
+        if (scope.cfg.streamMode) {
+          scope.cfg.streamMode = false;
+          var p = scope.cfg.streamPrev || {};
+          if (p.vehiclesOn !== undefined) scope.cfg.vehiclesOn = p.vehiclesOn;
+          if (p.guidesOn !== undefined) scope.cfg.guidesOn = p.guidesOn;
+          if (p.showPanel !== undefined) scope.cfg.showPanel = p.showPanel;
+          if (p.survivalOn !== undefined) scope.cfg.survivalOn = p.survivalOn;
+        } else {
+          scope.cfg.streamPrev = {
+            vehiclesOn: scope.cfg.vehiclesOn !== false,
+            guidesOn: scope.cfg.guidesOn === true,
+            showPanel: scope.cfg.showPanel !== false,
+            survivalOn: scope.cfg.survivalOn !== false
+          };
+          scope.cfg.streamMode = true;
+          scope.cfg.vehiclesOn = false;     // vetem Survival Chance ne ekran
+          scope.cfg.guidesOn = false;
+          scope.cfg.showPanel = false;      // paneli fshihet per regjistrim
+          scope.cfg.survivalOn = true;
+          scope.survival.visible = true;
+        }
+        scope.persist();
+      };
+
+      // Demo: nje sekuence e shpejte dramatikе per te provuar efektet.
+      scope.testDramaticDrop = function() {
+        var it = activeCostItem(); if (!it) return;
+        var old = Number(it.survivalChance); if (!isFinite(old)) old = 100;
+        var next = Math.max(0, old - 34);
+        it.survivalChance = next;
+        animateSurvivalDisplay(next);
+        showSurvivalDelta(old - next, old);
+        scope.persist();
+      };
+
+      scope.testGameOver = function() {
+        var it = activeCostItem(); if (!it) return;
+        var old = Number(it.survivalChance); if (!isFinite(old)) old = 100;
+        it.survivalChance = 0;
+        animateSurvivalDisplay(0);
+        showSurvivalDelta(old, old);
+        scope.persist();
       };
 
       scope.startSurvivalDrag = function(evt) {
@@ -2126,7 +2628,8 @@ angular.module('beamng.apps')
       };
 
       scope.keySummary = function() {
-        return 'PASS K · FAIL L · PREV PageUp / Numpad4 · NEXT PageDown / Numpad6 · RESET G · PANEL H · RRETHET ON/OFF ' + (scope.cfg.vehiclesKey || 'V').toUpperCase();
+        return 'PASS K · FAIL L · PREV PageUp / Numpad4 · NEXT PageDown / Numpad6 · RESET G · PANEL H · CIRCLES ' +
+               (scope.cfg.vehiclesKey || 'V').toUpperCase() + ' · STREAM ' + (scope.cfg.streamKey || 'B').toUpperCase();
       };
 
 
@@ -2146,6 +2649,9 @@ angular.module('beamng.apps')
         }
         // v5.1: ON/OFF i rrumullakateve nga bindings (Options -> Controls)
         else if (data.action === 'toggleVehicles') scope.toggleVehicles();
+        // v5.2: stream mode dhe ze nga bindings (Options -> Controls)
+        else if (data.action === 'toggleStream') scope.toggleStreamMode();
+        else if (data.action === 'resetSurvival') scope.resetSurvival();
         scope.$applyAsync();
       });
 
@@ -2200,6 +2706,9 @@ angular.module('beamng.apps')
 
         if (keyMatches(e, scope.cfg.togglePanelKey)) {
           scope.$applyAsync(function(){ scope.togglePanel(); });
+          handled = true;
+        } else if (keyMatches(e, scope.cfg.streamKey)) {
+          scope.$applyAsync(function(){ scope.toggleStreamMode(); });
           handled = true;
         } else if (keyMatches(e, scope.cfg.vehiclesKey)) {
           scope.$applyAsync(function(){ scope.toggleVehicles(); });
@@ -2286,6 +2795,19 @@ angular.module('beamng.apps')
         if (survivalTweenTimer) { try { $timeout.cancel(survivalTweenTimer); } catch(e) {} }
         if (survivalEmojiTimer) { try { $timeout.cancel(survivalEmojiTimer); } catch(e) {} }
         if (unwatchSurvivalEmoji) { try { unwatchSurvivalEmoji(); } catch(e) {} }
+        // ---- v5.2 ----
+        if (unwatchSurvivalState) { try { unwatchSurvivalState(); } catch(e) {} }
+        if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch(e) {} }
+        if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch(e) {} }
+        if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch(e) {} }
+        if (survivalGameOverTimer) { try { $timeout.cancel(survivalGameOverTimer); } catch(e) {} }
+        if (survivalVignetteTimer) { try { $timeout.cancel(survivalVignetteTimer); } catch(e) {} }
+        if (sound.hbTimer) { try { clearTimeout(sound.hbTimer); } catch(e) {} sound.hbTimer = null; }
+        try { if (sound.ctx && sound.ctx.close) sound.ctx.close(); } catch(e) {}
+        try {
+          $document.off('mousedown', resumeAudioOnGesture);
+          $document.off('keydown', resumeAudioOnGesture);
+        } catch(e) {}
         $document.off('click', onDocClickPicker);
       });
     }

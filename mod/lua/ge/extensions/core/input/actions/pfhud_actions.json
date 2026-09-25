@@ -88,5 +88,25 @@
     "title": "HUD PRO: Toggle vehicle circles",
     "desc": "Show or hide the round vehicle circles at the top, leaving only Survival Chance on screen.",
     "isBasic": true
+  },
+  "pfhud_toggle_stream": {
+    "cat": "gameplay",
+    "order": 9110,
+    "ctx": "tlua",
+    "actionMap": "Global",
+    "onDown": "extensions.load('creatorpack'); if extensions and extensions.creatorpack then extensions.creatorpack.pfhudToggleStream() end",
+    "title": "HUD PRO: Toggle stream mode",
+    "desc": "Hide the config panel, vehicle circles and 9:16 guides, leaving only Survival Chance on screen.",
+    "isBasic": true
+  },
+  "pfhud_reset_survival": {
+    "cat": "gameplay",
+    "order": 9111,
+    "ctx": "tlua",
+    "actionMap": "Global",
+    "onDown": "extensions.load('creatorpack'); if extensions and extensions.creatorpack then extensions.creatorpack.pfhudResetSurvival() end",
+    "title": "HUD PRO: Reset survival chance",
+    "desc": "Reset Survival Chance of every vehicle back to 100%.",
+    "isBasic": true
   }
 }
