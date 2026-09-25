@@ -80,11 +80,13 @@ check('5 ngjyrat ekzistojnë', ['#42ff68', '#ffd23f', '#ff7a2f', '#ff334d', '#b3
 check('thresholds: caution 80 / warning 55 / critical 20',
   iso.cfg.survivalCautionThreshold === 80 && iso.cfg.survivalWarningThreshold === 55 && iso.cfg.survivalCriticalThreshold === 20);
 check('FX dramatike default ON', iso.cfg.survivalHeartbeat && iso.cfg.survivalGlowPulse && iso.cfg.survivalRedFlash &&
-  iso.cfg.survivalImpactPopup && iso.cfg.survivalVerdictOn && iso.cfg.survivalCriticalGlitch);
+  iso.cfg.survivalVerdictOn && iso.cfg.survivalCriticalGlitch);
 check('vignette e vjetër u hoq krejt', !HTML.includes('pf-vignette') && !JS.includes('survivalVignette'));
 check('zëri default = both', iso.cfg.survivalSoundMode === 'both');
-check('overlay-at ekzistojnë', !!q('.pf-flash') && !!q('.pf-impact') && !!q('.pf-survival-aura'));
+check('mbetet vetëm flash (pa popup mbi ekran)', !!q('.pf-flash') && !q('.pf-impact') && !!q('.pf-survival-aura'));
 check('s’ka ma overlay GAME OVER mbi lojën', !JSON.stringify(HTML).includes('pf-gameover'));
+check('popup-i i madh “-%” u hoq krejt', !HTML.includes('pf-impact') && !JS.includes('triggerImpactPopup') &&
+  !JS.includes('survivalImpactPopup'));
 check('stream mode OFF', iso.streamModeOn() === false);
 
 console.log('\n— statusi sipas % —');
@@ -220,7 +222,7 @@ check('fushat __raw nuk ruhen', !Object.keys(saved).some(k => k.includes('__raw'
 // v5.3.0 — versioni, toast, diagnostika
 // =====================================================================
 console.log('\n— v5.3.0: versioni & diagnostika —');
-check('versioni shfaqet në HUD', iso.modVersion === '5.3.0', iso.modVersion);
+check('versioni shfaqet në HUD', iso.modVersion === '5.3.1', iso.modVersion);
 check('badge-i i versionit në panel', HTML.includes('pf-version') && HTML.includes('v{{modVersion}}'));
 check('toast-i i ngarkimit ekziston', HTML.includes('pf-toast') && typeof iso.showToast === 'function');
 iso.showToast(); $timeout.flush(20);
@@ -230,7 +232,7 @@ check('toast-i është JASHTË panelit (duket edhe i mbyllur)', (function() {
   if (!t) return false;
   return !t.closest('.pf-panel');
 })(), 'toast brenda panelit');
-check('toast-i shfaq versionin', /5\.3\.0/.test(txt('.pf-toast') || ''), txt('.pf-toast'));
+check('toast-i shfaq versionin', /5\.3\.1/.test(txt('.pf-toast') || ''), txt('.pf-toast'));
 $timeout.flush(6500);
 check('toast-i mbyllet vetë', iso.toast.show === false);
 check('tab-i DIAGNOSTIKA ekziston', HTML.includes('DIAGNOSTIKA') && HTML.includes('runDiagnostics'));
@@ -241,6 +243,47 @@ check('storable key raportohet', iso.storageKey === 'pfhud_config_v14_working_up
 let dErr = null;
 try { iso.runDiagnostics(); } catch (e) { dErr = e.message; }
 check('runDiagnostics pa gabime', dErr === null, dErr);
+
+// =====================================================================
+// v5.3.1 — fonti yt, pa glow, titull = madhësi e %, -X% discret
+// =====================================================================
+console.log('\n— v5.3.1: fonti yt & pastrimi i ekranit —');
+check('glow default = 0 (pa shkëlqim)', iso.cfg.survivalGlow === 0, iso.cfg.survivalGlow);
+check('titulli i njëjtë madhësi me % (labelScale 1.0)', iso.cfg.survivalLabelScale === 1.0, iso.cfg.survivalLabelScale);
+check('stili i -X% default = subtle', iso.cfg.survivalDeltaStyle === 'subtle', iso.cfg.survivalDeltaStyle);
+check('klasa delta-style-subtle aplikohet', iso.survivalClass()['delta-style-subtle'] === true);
+check('klasa delta-style-badge ekziston në CSS', HTML.includes('.pf-survival.delta-style-badge') || HTML.includes('.delta-style-'));
+iso.cfg.survivalDeltaStyle = 'badge'; $rootScope.$digest();
+check('  kalimi në badge', iso.survivalClass()['delta-style-badge'] === true);
+iso.cfg.survivalDeltaStyle = 'off'; $rootScope.$digest();
+check('  kalimi në off', iso.survivalClass()['delta-style-off'] === true);
+iso.cfg.survivalDeltaStyle = 'subtle'; $rootScope.$digest();
+check('zëri default ma i butë (0.25)', iso.cfg.survivalSoundVolume === 0.25, iso.cfg.survivalSoundVolume);
+
+console.log('\n— ngarkuesi i fontit tënd —');
+check('elementi i file-it për font ekziston', HTML.includes('pfhudReadFontFile') && /accept="\.ttf/.test(HTML));
+check('funksionet ekzistojnë', typeof iso.readUserFont === 'function' && typeof iso.clearUserFont === 'function' &&
+  typeof iso.applyUserFont === 'function');
+check('style-injektuesi #pfUserFontStyle ekziston', !!q('#pfUserFontStyle'));
+iso.applyUserFont('data:font/ttf;base64,AAAA');
+check('@font-face injektohet me fontin e user-it',
+  /HUD User Font/.test(q('#pfUserFontStyle').textContent), q('#pfUserFontStyle').textContent.slice(0, 60));
+iso.cfg.survivalUserFontData = 'data:font/ttf;base64,AAAA';
+iso.cfg.survivalUserFontName = 'MyFont.ttf';
+iso.cfg.survivalFontFamily = 'user';
+iso.applyUserFont(iso.cfg.survivalUserFontData);
+$rootScope.$digest();
+check('klasa font-user aktivizоhet', iso.survivalClass()['font-user'] === true);
+iso.clearUserFont(); $rootScope.$digest();
+check('clearUserFont heq fontin dhe kthen Bangers',
+  iso.cfg.survivalUserFontData === '' && iso.cfg.survivalFontFamily === 'bangers' && q('#pfUserFontStyle').textContent === '');
+// skedar i madh -> paralajmërim, pa crash
+let bigErr = null;
+try { iso.readUserFont({ files: [{ name: 'huge.ttf', size: 5 * 1024 * 1024 }] }); $rootScope.$digest(); } catch (e) { bigErr = e.message; }
+check('skedari i madh refuzohet pa crash', bigErr === null && /shumë i madh/.test(iso.userFontMsg || ''), iso.userFontMsg);
+let extErr = null;
+try { iso.readUserFont({ files: [{ name: 'foto.png', size: 1000 }] }); $rootScope.$digest(); } catch (e) { extErr = e.message; }
+check('skedari jo-font refuzohet', extErr === null && /nuk duket font/.test(iso.userFontMsg || ''), iso.userFontMsg);
 
 // =====================================================================
 // Migrimi nga nje konfigurim i vjetër (v5.0 / v5.1)
@@ -273,6 +316,9 @@ check('vula zëvendësoi GAME OVER', scope2.cfg.survivalVerdictOn === true && sc
 check('emoji-t e reja u shtuan', scope2.cfg.survivalEmojiSafe === '😎' && scope2.cfg.survivalEmojiDead === '💀');
 check('emoji i saktë edhe pas migrimit', (function(){ scope2.cfg.items[scope2.selected].survivalChance = 100;
   scope2.survival.displayValue = 100; $rootScope.$digest(); return scope2.survivalEmojiText() === '😎'; })());
+check('migrimi pastroi glow-in dhe barazoi titullin', scope2.cfg.survivalGlow === 0 && scope2.cfg.survivalLabelScale === 1.0,
+  scope2.cfg.survivalGlow + ' / ' + scope2.cfg.survivalLabelScale);
+check('migrimi vendosi -X% discret', scope2.cfg.survivalDeltaStyle === 'subtle', scope2.cfg.survivalDeltaStyle);
 check('tastet e reja u shtuan', scope2.cfg.streamKey === 'b');
 check('makinat u rigjeneruan', scope2.cfg.items.length === 8, scope2.cfg.items.length);
 check('renditja e frazave funksionon edhe pas migrimit',

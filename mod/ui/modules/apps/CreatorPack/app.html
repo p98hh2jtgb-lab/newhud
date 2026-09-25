@@ -862,6 +862,19 @@
     .pf-survival.font-bangers .pf-survival-value { letter-spacing:.01em; }
     .pf-survival.font-bangers .pf-survival-label { letter-spacing:.05em; }
     .pf-survival.font-bangers .pf-survival-value i { font-style:normal; font-size:.62em; }
+
+    /* v5.3.1: FONTI YT — ngarko çfarëdo .ttf/.otf/.woff/.woff2 dhe aplikohet këtu.
+       Titulli, % dhe statusi marrin të njëjtin font; ngjyrat mbeten të ndara. */
+    .pf-survival.font-user .pf-survival-label,
+    .pf-survival.font-user .pf-survival-value,
+    .pf-survival.font-user .pf-survival-old,
+    .pf-survival.font-user .pf-survival-status,
+    .pf-survival.font-user .pf-survival-verdict {
+      font-family:'HUD User Font','Bangers HUD',Impact,sans-serif;
+      font-style:normal;
+    }
+    .pf-survival.font-user .pf-survival-value { font-weight:400; letter-spacing:.01em; }
+    .pf-survival.font-user .pf-survival-label { font-weight:400; letter-spacing:.05em; }
     .pf-survival-label {
       font-size:.60em;
       font-weight:400;
@@ -969,6 +982,31 @@
       will-change:transform,opacity;
       animation:pfSurvivalDeltaPop 900ms cubic-bezier(.2,.8,.25,1) forwards;
     }
+
+    /* v5.3.1: stil i re "Discret" (default) — pa kuti, pa border, pa background.
+       Vetëm një tekst i vogël që shfaqet dhe zhduket pa zhurmë vizuale. */
+    .pf-survival.delta-style-subtle .pf-survival-delta {
+      position:static;
+      display:inline-block;
+      margin:0 0 0 .30em;
+      padding:0;
+      font-size:.30em;
+      font-weight:400;
+      letter-spacing:.04em;
+      background:none;
+      border:none;
+      box-shadow:none;
+      -webkit-text-stroke:0;
+      text-shadow:0 2px 4px rgba(0,0,0,.9);
+      animation:pfDeltaSubtle 1200ms cubic-bezier(.2,.8,.3,1) forwards;
+    }
+    @keyframes pfDeltaSubtle {
+      0%   { opacity:0; transform:translateY(5px); }
+      16%  { opacity:1; transform:translateY(0); }
+      70%  { opacity:1; }
+      100% { opacity:0; transform:translateY(-8px); }
+    }
+    .pf-survival.delta-style-off .pf-survival-delta { display:none!important; }
     @keyframes pfSurvivalDeltaPop {
       0% { opacity:0; transform:translateY(5px) scale(.38); }
       16% { opacity:1; transform:translateY(0) scale(1.24); }
@@ -1062,21 +1100,6 @@
     .pf-flash.big.go { animation:pfRedFlash 640ms ease-out; }
     @keyframes pfRedFlash { 0%{opacity:0} 10%{opacity:1} 100%{opacity:0} }
 
-    .pf-impact {
-      position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
-      font-family:'Bangers HUD','Bangers',Impact,sans-serif; font-size:74px; line-height:1;
-      color:#fff; z-index:6; pointer-events:none; opacity:0; letter-spacing:.02em;
-      -webkit-text-stroke:1.4px rgba(0,0,0,.55);
-      text-shadow:0 0 26px rgba(255,40,40,.85),0 4px 10px rgba(0,0,0,.80);
-    }
-    .pf-impact.show { animation:pfImpactPop 900ms cubic-bezier(.2,.9,.3,1) forwards; }
-    @keyframes pfImpactPop {
-      0% { opacity:0; transform:translate(-50%,-50%) scale(.45); }
-      22% { opacity:1; transform:translate(-50%,-50%) scale(1.14); }
-      60% { opacity:1; transform:translate(-50%,-56%) scale(1); }
-      100% { opacity:0; transform:translate(-50%,-74%) scale(1.06); }
-    }
-
     /* v5.2.1: në vend të "GAME OVER" gjigant mbi lojën, një vulë kompakte
        brenda HUD-it (ma e qartë për audiencën, nuk t'zë ekranin). */
     .pf-survival-verdict {
@@ -1128,9 +1151,11 @@
 
   <!-- v4.1: repair-cost line removed; damage now lives in the vehicle rings. -->
 
-  <!-- v5.2.1: flash + popup i goditjes (vignette u hoq — skuqte ekranin) -->
+  <!-- v5.3.1: vetëm flash (vignette dhe popup-i i madh "-%" u hoqën krejt) -->
   <div class="pf-flash" ng-class="{go: survival.flash, big: survival.flashBig}"></div>
-  <div class="pf-impact" ng-class="{show: survival.impactShow}">{{survival.impactText}}</div>
+
+  <!-- v5.3.1: këtu injektohet fonti që ngarkon vetë perdoruesi -->
+  <style id="pfUserFontStyle"></style>
 
   <!-- v4.3: movable Survival Chance overlay -->
   <div class="pf-survival" ng-if="survivalVisible()"
@@ -1642,12 +1667,30 @@
         <div class="pf-card"><div class="mini">Fonti i tekstit</div>
           <select class="pf-input" ng-model="cfg.survivalFontFamily" ng-change="persist()">
             <option value="bangers">Bangers (i ngulitur)</option>
+            <option value="user" ng-if="cfg.survivalUserFontData">Fonti im ({{cfg.survivalUserFontName || 'i ngarkuar'}})</option>
             <option value="narrow">Arial Narrow (vjetri)</option>
             <option value="impact">Impact (Windows)</option>
             <option value="arialblack">Arial Black (Windows)</option>
           </select>
           <div class="pf-note" ng-if="cfg.survivalFontFamily === 'bangers'">Bangers (SIL OFL 1.1) është i ngulitur në mod: titulli, përqindja dhe statusi kanë <b>të njëjtin font</b>, por ngjyrat mbeten të ndara. Fonti punon edhe offline, pa instalim.</div>
           <div class="pf-note" ng-if="cfg.survivalFontFamily !== 'bangers'">Fontet e sistemit i merr nga Windows-i. Bangers është fonti i rekomanduar.</div>
+        </div>
+
+        <!-- v5.3.1: FONTI YT -->
+        <div class="pf-card">
+          <div class="mini">FONTI YT (ngarko çka të duash)</div>
+          <input class="pf-real-file" type="file" accept=".ttf,.otf,.woff,.woff2,font/*"
+                 onchange="window.pfhudReadFontFile && window.pfhudReadFontFile(this)">
+          <div class="pf-note" style="margin-top:7px">
+            Shkarko një font (.ttf / .otf / .woff / .woff2) nga Google Fonts ose prej kudo, pastaj
+            kliko më lart dhe zgjidhe. Ai aplikohet te <b>titulli, përqindja dhe statusi</b> —
+            ngjyrat mbeten të ndara si ma parë. Ruhet në HUD (max ~1.4 MB).
+          </div>
+          <div class="pf-row" style="margin-top:8px" ng-if="cfg.survivalUserFontData">
+            <span class="pf-hint">I ngarkuar: <b>{{cfg.survivalUserFontName}}</b></span>
+            <button class="pf-btn red" ng-click="clearUserFont()">Hiq fontin e ngarkuar</button>
+          </div>
+          <div class="pf-note" ng-if="userFontMsg" style="color:#ffd9a1">{{userFontMsg}}</div>
         </div>
         <div class="pf-card"><div class="mini">FX i tekstit (v5.2)</div>
           <select class="pf-input" ng-model="cfg.survivalTextFx" ng-change="persist()">
@@ -1662,11 +1705,15 @@
           </select>
           <div class="pf-note">Këto janë thjesht CSS — pa FPS humbje, punojnë offline.</div>
         </div>
-        <div class="pf-card"><div class="mini">Label scale: {{cfg.survivalLabelScale|number:2}}</div><input class="pf-range" type="range" min="0.3" max="1" step="0.05" ng-model="cfg.survivalLabelScale" ng-change="persist()"></div>
+        <div class="pf-card"><div class="mini">Madhësia e titullit: {{(cfg.survivalLabelScale*100)|number:0}}% e përqindjes</div><input class="pf-range" type="range" min="0.3" max="1.4" step="0.05" ng-model="cfg.survivalLabelScale" ng-change="persist()">
+          <div class="pf-note" ng-if="cfg.survivalLabelScale >= 0.99">Titulli është <b>i njëjtë</b> me përqindjen (si në screenshot-in tond).</div>
+        </div>
         <div class="pf-card" ng-if="cfg.survivalFontFamily === 'bangers'"><div class="mini">Font weight</div><div class="pf-note" style="margin-top:6px">Bangers ka vetëm një peshë (400) — bold-i i rremë e bën të turbullt, prandaj mbetet 400.</div></div>
         <div class="pf-card" ng-if="cfg.survivalFontFamily !== 'bangers'"><div class="mini">Font weight</div><select class="pf-input" ng-model="cfg.survivalFontWeight" ng-change="persist()"><option value="400">400</option><option value="700">700</option><option value="800">800</option><option value="900">900</option></select></div>
         <div class="pf-card"><div class="mini">Outline: {{cfg.survivalOutline|number:1}} px</div><input class="pf-range" type="range" min="0" max="3" step="0.25" ng-model="cfg.survivalOutline" ng-change="persist()"></div>
-        <div class="pf-card"><div class="mini">Glow: {{cfg.survivalGlow}} px</div><input class="pf-range" type="range" min="0" max="30" step="1" ng-model="cfg.survivalGlow" ng-change="persist()"></div>
+        <div class="pf-card"><div class="mini">Glow (shkëlqim): {{cfg.survivalGlow}} px</div><input class="pf-range" type="range" min="0" max="30" step="1" ng-model="cfg.survivalGlow" ng-change="persist()">
+          <div class="pf-note" ng-if="cfg.survivalGlow === 0">0 px = pa shkëlqim (default i ri). Rrite vetëm nëse e do.</div>
+        </div>
         <div class="pf-card"><div class="mini">Decimalet</div><div class="pf-shape-buttons"><button class="pf-btn" ng-class="{active:cfg.survivalDecimals===0}" ng-click="cfg.survivalDecimals=0;persist()">0</button><button class="pf-btn" ng-class="{active:cfg.survivalDecimals===1}" ng-click="cfg.survivalDecimals=1;persist()">1</button></div></div>
         <div class="pf-card"><div class="mini">Efektet</div><label class="pf-toggle" ng-if="cfg.survivalFontFamily !== 'bangers'"><input type="checkbox" ng-model="cfg.survivalItalic" ng-change="persist()"> Italic</label><label class="pf-toggle" ng-if="cfg.survivalFontFamily === 'bangers'"><span class="pf-note" style="margin:0">Italic nuk aplikohet te Bangers (i bën shkronjat artificiale).</span></label><label class="pf-toggle"><input type="checkbox" ng-model="cfg.survivalImpactShake" ng-change="persist()"> Impact shake</label><label class="pf-toggle"><input type="checkbox" ng-model="cfg.survivalLowPulse" ng-change="persist()"> Low-chance pulse</label></div>
       </div>
@@ -1734,7 +1781,13 @@
 
       <div class="pf-divider"></div>
       <div class="pf-label">Mini Delta Animation</div>
-      <div class="pf-toggle"><label><input type="checkbox" ng-model="cfg.survivalShowDelta" ng-change="persist()"> Shfaq -X%</label></div>
+      <div class="pf-toggle"><label><input type="checkbox" ng-model="cfg.survivalShowDelta" ng-change="persist()"> Shfaq -X% pas goditjes</label></div>
+      <div class="pf-shape-buttons" style="margin-top:8px">
+        <button class="pf-btn" ng-class="{active:(cfg.survivalDeltaStyle||'subtle')==='subtle'}" ng-click="cfg.survivalDeltaStyle='subtle';persist()">Discret (i re)</button>
+        <button class="pf-btn" ng-class="{active:cfg.survivalDeltaStyle==='badge'}" ng-click="cfg.survivalDeltaStyle='badge';persist()">Kuti (i vjetri)</button>
+        <button class="pf-btn" ng-class="{active:cfg.survivalDeltaStyle==='off'}" ng-click="cfg.survivalDeltaStyle='off';persist()">Pa -X% fare</button>
+      </div>
+      <div class="pf-note">“Discret”: një tekst i vogël pranë përqindjes, pa kuti e pa border — nuk t’zë ekranin.</div>
       <div class="pf-grid" style="margin-top:9px">
         <div class="pf-card"><div class="mini">Kohëzgjatja: {{cfg.survivalDeltaDuration}} ms</div><input class="pf-range" type="range" min="300" max="2000" step="50" ng-model="cfg.survivalDeltaDuration" ng-change="persist()"></div>
         <div class="pf-card"><div class="mini">Minimum drop: {{cfg.survivalDeltaMin|number:1}}%</div><input class="pf-range" type="range" min="0.1" max="10" step="0.1" ng-model="cfg.survivalDeltaMin" ng-change="persist()"></div>
@@ -1816,13 +1869,12 @@
         <label><input type="checkbox" ng-model="cfg.survivalHeartbeat" ng-change="persist();refreshSurvivalDrama()"> Rrahje zemre (HUD-i pulson)</label>
         <label><input type="checkbox" ng-model="cfg.survivalGlowPulse" ng-change="persist();refreshSurvivalDrama()"> Aureolë dramatike rreth HUD-it (në rrezik)</label>
         <label><input type="checkbox" ng-model="cfg.survivalRedFlash" ng-change="persist()"> Flash i kuq në KRITIK / 0%</label>
-        <label><input type="checkbox" ng-model="cfg.survivalImpactPopup" ng-change="persist()"> Popup i madh “-18%” në goditje</label>
         <label><input type="checkbox" ng-model="cfg.survivalCriticalGlitch" ng-change="persist()"> Glitch i statusit në kritik</label>
         <label><input type="checkbox" ng-model="cfg.survivalVerdictOn" ng-change="persist()"> Vula “TOTALED” brenda HUD-it kur arrin 0%</label>
       </div>
       <div class="pf-grid" style="margin-top:9px">
         <div class="pf-card"><div class="mini">Heartbeat: {{cfg.survivalHeartbeatAmount}}%</div><input class="pf-range" type="range" min="0" max="100" step="5" ng-model="cfg.survivalHeartbeatAmount" ng-change="persist();refreshSurvivalDrama()"></div>
-        <div class="pf-card"><div class="mini">Aureola: {{cfg.survivalGlowAmount}}%</div><input class="pf-range" type="range" min="0" max="100" step="5" ng-model="cfg.survivalGlowAmount" ng-change="persist();refreshSurvivalDrama()"></div>
+        <div class="pf-card"><div class="mini">Aureola (shkëlqim rreth HUD-it): {{cfg.survivalGlowAmount}}%</div><input class="pf-range" type="range" min="0" max="100" step="5" ng-model="cfg.survivalGlowAmount" ng-change="persist();refreshSurvivalDrama()"></div>
         <div class="pf-card"><div class="mini">Teksti i vulës (0%)</div><input class="pf-input" type="text" ng-model="cfg.survivalVerdictText" ng-change="persist()" maxlength="20"></div>
         <div class="pf-card"><div class="mini">Vula zgjat: {{cfg.survivalVerdictMs}} ms</div><input class="pf-range" type="range" min="1200" max="8000" step="200" ng-model="cfg.survivalVerdictMs" ng-change="persist()"></div>
       </div>
@@ -1839,7 +1891,7 @@
         <button class="pf-btn" ng-click="cfg.streamKey = (cfg.streamKey === 'b' ? 'n' : 'b'); persist()">Tasti: {{(cfg.streamKey || 'B').toUpperCase()}}</button>
       </div>
       <div class="pf-note">Kur ndizet: fsheh panelin, rrumullakat e makinave dhe guidat 9:16 — në ekran mbetet vetëm Survival Chance. E njëjta gjë me tastin {{(cfg.streamKey || 'B').toUpperCase()}}.</div>
-      <div class="pf-note" style="margin-top:6px">v5.2.1: vignette-a që skuqte ekranin u hoq — drama tani mbetet rreth HUD-it (aureola), kurrë mbi lojën.</div>
+      <div class="pf-note" style="margin-top:6px">v5.3.1: pa vignette mbi ekran, pa popup “-%” në qendër. Drama mbetet vetëm rreth HUD-it (aureola) — fike krejt me 0% ose hiqe shenjën.</div>
 
       <div class="pf-divider"></div>
       <div class="pf-label">Bindings (Options → Controls)</div>
@@ -2041,6 +2093,8 @@
           Fonti i HUD-it: <b>{{fontFamilyText}}</b><br>
           Ekran i kuq (vignette): <span class="ok"><b>HEQUR ✓</b></span> — vetëm aureolë lokale<br>
           Overlay “GAME OVER”: <span class="ok"><b>HEQUR ✓</b></span> — vula “{{cfg.survivalVerdictText}}” brenda HUD-it<br>
+          Popup “-%” në qendër: <span class="ok"><b>HEQUR ✓</b></span> · Stili i -X%: <b>{{cfg.survivalDeltaStyle}}</b> · Glow: <b>{{cfg.survivalGlow}} px</b><br>
+          Titulli vs përqindja: <b>{{(cfg.survivalLabelScale*100)|number:0}}%</b> · Fonti: <b>{{cfg.survivalFontFamily}}</b><br>
           Zëri: <b>{{survivalSoundOn() ? 'ON' : 'OFF'}}</b> · Stream mode: <b>{{streamModeOn() ? 'ON' : 'OFF'}}</b><br>
           Ruajtja: <b>{{storageKey}}</b>
         </div>

@@ -1,5 +1,14 @@
 # Changelog — HUD PRO (CreatorPack)
 
+## v5.3.1 — “Fonti yt, pa glow, pa -% në ekran”
+- **Ngarkues fonti**: buton në panel → zgjidh `.ttf/.otf/.woff/.woff2` → aplikohet te titulli, % dhe statusi (të njëjtin font, ngjyra të ndara). Ruhet në HUD (max ~1.4 MB) + buton “Hiq fontin e ngarkuar”. Fonti ruhet lokalisht, nuk shpërndahet me modin.
+- **Glow = 0** si parazgjedhje (ishte 10 px) — pa shkëlqim mbi tekst.
+- **Titulli = madhësia e përqindjes**: `survivalLabelScale` default `1.0` (slider 30–140%).
+- **Popup-i i madh “-%” në qendër u HOQ krejt**; `-X%` pas goditjes ka stile: `Discret` (default, pa kuti/border/sfond), `Kuti` (i vjetri), `Pa -X% fare`.
+- **Zë ma i butë**: volum default 0.25, crash noise 0.35×, blicat me ton `sine`.
+- Diagnostika tregon glow-in, stilin e `-X%` dhe raportin titull/përqindje; migrimi i konfigurimit i vendos vetë këto vlera pa resetuar asgjë.
+
+## v5.3.0 — “Sigurim + diagnostikë”
 ## v5.3.0 — “Sigurim + diagnostikë” (kjo është versioni i pastër)
 **Pse kjo version?** Përdoruesi raportoi se pas instalimit “nuk ndryshoi asgjë”. Shkaku ma i zakonshëm: dy ZIP-e CreatorPack njëkohësisht në dosjen e mod-eve (i vjetri fiton). Kjo version e bën të pamundur ngatërrimin:
 

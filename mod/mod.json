@@ -1,6 +1,6 @@
 {
   "name": "CreatorPack",
-  "version": "5.3.0",
+  "version": "5.3.1",
   "author": "daimy",
-  "description": "HUD PRO v5.3.0 - FIXED RELEASE: Bangers font really applies (title, %, status - one font, separate colors), no red screen (local aura only), no full-screen GAME OVER (compact TOTALED badge), clearer status phrases, editable emojis, version badge + startup toast + built-in diagnostics so you can always see which version is loaded."
+  "description": "HUD PRO v5.3.1 - Load YOUR OWN font (.ttf/.otf/.woff/.woff2) straight from the panel; no text glow by default; SURVIVAL CHANCE label = same size as the percentage; the center '-'%' popup is gone and the after-hit -X% is now a small discreet text (subtle/badge/off); softer sound."
 }

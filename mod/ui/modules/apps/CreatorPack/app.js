@@ -38,7 +38,7 @@ angular.module('beamng.apps')
       // v5.3.0 — Versioni shfaqet brenda HUD-it, që të shihet
       // menjëherë nëse BeamNG ka ngarkuar versionin e re.
       // =====================================================
-      var MOD_VERSION = '5.3.0';
+      var MOD_VERSION = '5.3.1';
       scope.modVersion = MOD_VERSION;
       scope.storageKey = STORAGE_KEY;
       scope.toast = { show: false };
@@ -60,6 +60,16 @@ angular.module('beamng.apps')
           scope.fontCheckText = 'kontrolli dështoi: ' + e.message;
         }
         try {
+          if (scope.cfg.survivalFontFamily === 'user' && scope.cfg.survivalUserFontData) {
+            var okUser = false;
+            try { okUser = window.document.fonts.check('16px "HUD User Font"'); } catch (e3) {}
+            scope.fontOk = okUser;
+            scope.fontCheckText = okUser
+              ? ('fonti yt: ' + (scope.cfg.survivalUserFontName || 'i ngarkuar') + ' ✓')
+              : ('fonti yt nuk u aktivizua: ' + (scope.cfg.survivalUserFontName || '—'));
+          }
+        } catch (e4) {}
+        try {
           var node = element && element[0] ? element[0].querySelector('.pf-survival') : null;
           scope.fontFamilyText = node && window.getComputedStyle
             ? String(window.getComputedStyle(node).fontFamily || '').split(',')[0]
@@ -67,6 +77,94 @@ angular.module('beamng.apps')
         } catch (e2) { scope.fontFamilyText = 'pa element'; }
       }
       scope.checkBangers = checkBangers;
+
+      // =====================================================
+      // v5.3.1 — FONTI YT: ngarko .ttf/.otf/.woff/.woff2
+      // =====================================================
+      scope.userFontMsg = '';
+      var userFontStyleEl = null;
+
+      function userFontStyle() {
+        if (!userFontStyleEl) {
+          try { userFontStyleEl = element && element[0] ? element[0].querySelector('#pfUserFontStyle') : null; }
+          catch (e) { userFontStyleEl = null; }
+        }
+        return userFontStyleEl;
+      }
+
+      // Injekton @font-face me fontin e perdoruesit (base64 data URL).
+      function applyUserFont(dataUrl) {
+        var el = userFontStyle();
+        if (!el) return false;
+        try {
+          el.textContent = dataUrl
+            ? "@font-face{font-family:'HUD User Font';font-style:normal;font-weight:100 900;font-display:swap;src:url(" + dataUrl + ");}"
+            : "";
+          scope.survival.userFontLoaded = !!dataUrl;
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+      scope.applyUserFont = applyUserFont;
+
+      var USER_FONT_MAX = 1400000;   // ~1.4 MB
+
+      scope.readUserFont = function(inputEl) {
+        try {
+          var file = inputEl && inputEl.files && inputEl.files[0];
+          if (!file) return;
+          if (file.size > USER_FONT_MAX) {
+            scope.$applyAsync(function() {
+              scope.userFontMsg = 'Fonti është shumë i madh (' + Math.round(file.size / 1024) +
+                ' KB). Limiti ~1.4 MB — provo një .woff2 (ma i vogli).';
+            });
+            return;
+          }
+          if (!/\.(ttf|otf|woff2?|TTF|OTF|WOFF2?)$/.test(file.name || '')) {
+            scope.$applyAsync(function() {
+              scope.userFontMsg = 'Ky skedar nuk duket font. Zgjidh .ttf / .otf / .woff / .woff2';
+            });
+            return;
+          }
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            scope.$applyAsync(function() {
+              scope.cfg.survivalUserFontData = e.target.result;
+              scope.cfg.survivalUserFontName = file.name;
+              scope.cfg.survivalFontFamily = 'user';
+              applyUserFont(e.target.result);
+              try { inputEl.value = ''; } catch (x) {}
+              scope.userFontMsg = 'U ngarkua: ' + file.name + ' ✓ (' + Math.round(file.size / 1024) + ' KB)';
+              scope.persist();
+              scope.$evalAsync(function() { checkBangers(); });
+            });
+          };
+          reader.onerror = function() {
+            scope.$applyAsync(function() { scope.userFontMsg = 'Nuk u lexua skedari. Provo përsëri.'; });
+          };
+          reader.readAsDataURL(file);
+        } catch (e) {
+          scope.userFontMsg = 'Gabim: ' + e.message;
+        }
+      };
+
+      scope.clearUserFont = function() {
+        scope.cfg.survivalUserFontData = '';
+        scope.cfg.survivalUserFontName = '';
+        if (scope.cfg.survivalFontFamily === 'user') scope.cfg.survivalFontFamily = 'bangers';
+        applyUserFont('');
+        scope.userFontMsg = 'Fonti i ngarkuar u hoq. U kthye Bangers.';
+        scope.persist();
+      };
+
+      // Kjo e thërret input-i i file-it brenda template-it.
+      try {
+        window.pfhudReadFontFile = function(inputEl) {
+          var fn = scope.readUserFont;
+          if (fn) fn(inputEl);
+        };
+      } catch (e) {}
       scope.runDiagnostics = function() { checkBangers(); scope.persist(); };
 
       scope.showToast = function() {
@@ -177,12 +275,16 @@ angular.module('beamng.apps')
           survivalEmojiProfileVersion: 3,
           survivalShowMeter: false,
           survivalShowPercent: true,
-          survivalLabelScale: 0.60,
+          survivalLabelScale: 1.0,         // v5.3.1: titulli i njejte madhësi me përqindjen
+          survivalLabelSameAsValue: true,
+          survivalUserFontData: '',        // v5.3.1: fonti qe ngarkon vetë perdoruesi (base64)
+          survivalUserFontName: '',
+          survivalDeltaStyle: 'subtle',    // v5.3.1: subtle | badge | off
           survivalFontFamily: 'bangers',  // v5.2.1: Bangers (i ngulitur) | narrow | impact | arialblack
           survivalFontWeight: '400',      // Bangers ka vetem 400 — pa false-bold
           survivalItalic: false,
           survivalOutline: 1,
-          survivalGlow: 10,
+          survivalGlow: 0,                 // v5.3.1: pa shkëlqim mbi tekst (ishte 10)
           survivalDecimals: 0,
           survivalShowDelta: true,
           survivalDeltaDuration: 850,
@@ -220,13 +322,12 @@ angular.module('beamng.apps')
           survivalGlowPulse: true,          // v5.2.1: aureola dramatike rreth HUD-it (jo ekran i kuq)
           survivalGlowAmount: 55,
           survivalRedFlash: true,           // flash i kuq kur kalon ne rrezik/kritik
-          survivalImpactPopup: true,        // teksti i madh "💥 -18%" ne pende
           survivalVerdictOn: true,          // v5.2.1: vula "TOTALED" brenda HUD-it kur arrin 0%
           survivalVerdictText: 'TOTALED',
           survivalVerdictMs: 3000,
           survivalCriticalGlitch: true,     // glitch kur je ne kritik
           survivalSoundMode: 'both',        // off | heartbeat | alerts | both
-          survivalSoundVolume: 0.35,
+          survivalSoundVolume: 0.25,     // v5.3.1: ma i bute
           survivalSoundBelow: 60,           // zeri fillon nen kete %
           streamMode: false,                // v5.2: fsheh panelin, rrumullakat dhe guidat me nje tast
           streamPrev: null,
@@ -412,12 +513,15 @@ angular.module('beamng.apps')
         }
         if (cfg.survivalShowMeter == null) cfg.survivalShowMeter = false;
         if (cfg.survivalShowPercent == null) cfg.survivalShowPercent = true;
-        if (cfg.survivalLabelScale == null) cfg.survivalLabelScale = 0.60;
+        if (cfg.survivalLabelScale == null) cfg.survivalLabelScale = 1.0;
+        if (cfg.survivalUserFontData == null) cfg.survivalUserFontData = '';
+        if (cfg.survivalUserFontName == null) cfg.survivalUserFontName = '';
+        if (!cfg.survivalDeltaStyle) cfg.survivalDeltaStyle = 'subtle';
         if (!cfg.survivalFontFamily) cfg.survivalFontFamily = 'futura';   // v5.1: Futura Extra Bold by default
         if (!cfg.survivalFontWeight) cfg.survivalFontWeight = '900';
         if (cfg.survivalItalic == null) cfg.survivalItalic = true;
         if (cfg.survivalOutline == null) cfg.survivalOutline = 1;
-        if (cfg.survivalGlow == null) cfg.survivalGlow = 10;
+        if (cfg.survivalGlow == null) cfg.survivalGlow = 0;
         if (cfg.survivalDecimals == null) cfg.survivalDecimals = 0;
         if (cfg.survivalShowDelta == null) cfg.survivalShowDelta = true;
         if (cfg.survivalDeltaDuration == null) cfg.survivalDeltaDuration = 850;
@@ -476,7 +580,6 @@ angular.module('beamng.apps')
         if (cfg.survivalGlowPulse == null) cfg.survivalGlowPulse = true;
         if (cfg.survivalGlowAmount == null) cfg.survivalGlowAmount = 55;
         if (cfg.survivalRedFlash == null) cfg.survivalRedFlash = true;
-        if (cfg.survivalImpactPopup == null) cfg.survivalImpactPopup = true;
         if (cfg.survivalVerdictOn == null) cfg.survivalVerdictOn = (saved && saved.survivalGameOver === false) ? false : true;
         if (!cfg.survivalVerdictText || cfg.survivalVerdictText === 'GAME OVER') cfg.survivalVerdictText = 'TOTALED';
         if (cfg.survivalVerdictMs == null) cfg.survivalVerdictMs = 3000;
@@ -491,6 +594,16 @@ angular.module('beamng.apps')
           cfg.survivalImpactShake = true;
           cfg.survivalLowPulse = true;
           cfg.survivalShowStatus = true;
+        }
+
+        // ---- v5.3.1: pa glow, titull nje madhësi me %, -% discret ----
+        if (savedFontVersion < 2) {
+          cfg.survivalGlow = 0;
+          cfg.survivalLabelScale = 1.0;
+          cfg.survivalDeltaStyle = 'subtle';
+          cfg.survivalGlowAmount = Math.min(Number(cfg.survivalGlowAmount) || 40, 40);
+          cfg.survivalSoundVolume = Math.min(Number(cfg.survivalSoundVolume) || 0.25, 0.25);
+          cfg.survivalFontProfileVersion = 2;
         }
 
         // ---- v5.2.1: Bangers per te gjitha pjeset, pa bold/italic te rreme ----
@@ -952,7 +1065,7 @@ angular.module('beamng.apps')
         visible:true, deltaVisible:false, deltaText:'',
         // ---- v5.2 ----
         rotIndex:0, stateKey:'safe', flash:false, flashBig:false,
-        impactText:'', impactShow:false, verdictShow:false, auraOpacity:0
+        verdictShow:false, auraOpacity:0, userFontLoaded:false
       };
       var survivalPulseTimer = null;
       var survivalDeltaTimer = null;
@@ -964,7 +1077,6 @@ angular.module('beamng.apps')
       var unwatchSurvivalEmoji = null;
       // ---- v5.2 timerat ----
       var survivalRotateTimer = null;
-      var survivalImpactTimer = null;
       var survivalFlashTimer = null;
       var survivalVerdictTimer = null;
       var unwatchSurvivalState = null;
@@ -1006,6 +1118,7 @@ angular.module('beamng.apps')
         refreshSurvivalDrama();
         restartSurvivalRotation();
         startSurvivalSound();
+        if (scope.cfg.survivalUserFontData) applyUserFont(scope.cfg.survivalUserFontData);
         checkBangers();
         scope.showToast();
         // rikontrollo pasi fonti të jetë ngarkuar vërtet
@@ -1042,11 +1155,8 @@ angular.module('beamng.apps')
           survivalDeltaTimer = $timeout(function() { scope.survival.deltaVisible = false; },
             Math.max(300, Number(scope.cfg.survivalDeltaDuration) || 850));
 
-          // ---- v5.2: popup i madh + ze + flash i vogel ----
-          if (drop >= minDrop) {
-            if (scope.cfg.survivalImpactPopup) triggerImpactPopup('-' + drop.toFixed(decimals) + '%');
-            survivalSoundAlert(null, null, drop);
-          }
+          // ---- v5.3.1: pa popup mbi ekran — vetëm tingulli (i butë) ----
+          if (drop >= minDrop) survivalSoundAlert(null, null, drop);
           refreshSurvivalDrama();
         }, 12);
 
@@ -1546,6 +1656,8 @@ angular.module('beamng.apps')
         var cls = {};
         var fam = scope.cfg.survivalFontFamily || 'bangers';
         cls['font-bangers'] = (fam === 'bangers' || fam === 'futura');    // v5.2.1: Bangers (edhe per config-et e vjetra)
+        cls['font-user'] = fam === 'user' && !!scope.cfg.survivalUserFontData;   // v5.3.1
+        cls['delta-style-' + (scope.cfg.survivalDeltaStyle || 'subtle')] = true; // v5.3.1
         cls['font-narrow'] = fam === 'narrow';
         cls['layout-' + (scope.cfg.survivalLayout || 'inline')] = true;
         cls['bg-' + (scope.cfg.survivalBackground || 'none')] = true;
@@ -1686,18 +1798,6 @@ angular.module('beamng.apps')
       }
       scope.triggerSurvivalFlash = triggerSurvivalFlash;
 
-      function triggerImpactPopup(text) {
-        if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch (e) {} }
-        scope.survival.impactText = text;
-        scope.survival.impactShow = false;
-        $timeout(function() {
-          scope.survival.impactShow = true;
-          survivalImpactTimer = $timeout(function() { scope.survival.impactShow = false; }, 900);
-        }, 8);
-      }
-      scope.triggerImpactPopup = triggerImpactPopup;
-
-      // v5.2.1: vula kompakte "TOTALED" brenda HUD-it (nuk mbulon lojen)
       function triggerVerdict() {
         if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch (e) {} }
         var ms = Math.max(1200, Math.min(8000, Number(scope.cfg.survivalVerdictMs) || 3000));
@@ -1820,15 +1920,15 @@ angular.module('beamng.apps')
       function survivalSoundAlert(nowKey, beforeKey, drop) {
         if (!soundWants('alerts')) return;
         var vol = soundVolume();
-        if (drop && drop >= 8) playCrashNoise(vol * 0.55);
+        if (drop && drop >= 10) playCrashNoise(vol * 0.35);   // v5.3.1: ma i bute
         if (nowKey === 'dead') {
           playBeep(120, vol * 0.85, 0.9, 'sawtooth');
           setTimeout(function() { playBeep(88, vol * 0.85, 1.1, 'sawtooth'); }, 190);
         } else if (nowKey === 'critical' && beforeKey !== 'critical') {
-          playBeep(880, vol * 0.45, 0.12, 'square');
-          setTimeout(function() { playBeep(660, vol * 0.45, 0.16, 'square'); }, 150);
+          playBeep(760, vol * 0.32, 0.10, 'sine');
+          setTimeout(function() { playBeep(600, vol * 0.32, 0.13, 'sine'); }, 140);
         } else if (nowKey === 'danger' && beforeKey !== 'danger') {
-          playBeep(520, vol * 0.35, 0.10, 'square');
+          playBeep(520, vol * 0.26, 0.09, 'sine');
         }
       }
 
@@ -2883,7 +2983,6 @@ angular.module('beamng.apps')
         if (unwatchSurvivalState) { try { unwatchSurvivalState(); } catch(e) {} }
         if (toastTimer) { try { $timeout.cancel(toastTimer); } catch(e) {} }
         if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch(e) {} }
-        if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch(e) {} }
         if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch(e) {} }
         if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch(e) {} }
         if (sound.hbTimer) { try { clearTimeout(sound.hbTimer); } catch(e) {} sound.hbTimer = null; }
