@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HUD PRO — Survival Lab (v5.2 ide)</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --safe:#42ff68; --caution:#ffd23f; --danger:#ff7a2f; --critical:#ff334d; --dead:#b3122b;
+    --panel:#0b0e14; --panel2:#121722; --line:rgba(255,255,255,.09); --txt:#e8edf5; --dim:#8b97ab; --acc:#ff8a1e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#05070b;color:var(--txt);
+    font-family:'Segoe UI',system-ui,Arial,sans-serif;overflow:hidden}
+  body{display:flex}
+
+  /* ---------- STAGE (simulim i lojes) ---------- */
+  #stage{position:relative;flex:1;min-width:0;overflow:hidden;cursor:default}
+  #game{position:absolute;inset:0;
+    background:
+      radial-gradient(120% 80% at 50% 120%, #2a2f3a 0%, #12151c 55%, #0a0c11 100%),
+      linear-gradient(#101318,#0a0c11);
+  }
+  #game:before{content:"";position:absolute;inset:0;opacity:.5;
+    background:linear-gradient(transparent 0 62%, #1b1f27 62% 100%),
+               repeating-linear-gradient(90deg, transparent 0 46px, rgba(255,255,255,.045) 46px 52px);
+  }
+  #game:after{content:"";position:absolute;left:0;right:0;top:62%;height:3px;background:rgba(255,255,255,.10)}
+  .ghost-car{position:absolute;left:50%;top:70%;width:230px;height:110px;transform:translate(-50%,-50%);
+    background:radial-gradient(60% 60% at 50% 45%, rgba(255,255,255,.10), transparent 70%);border-radius:40%}
+  #stageTag{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.16em;color:#5d6a80;text-transform:uppercase}
+  #stageHint{position:absolute;left:14px;bottom:12px;font-size:11px;color:#4f5b6e;max-width:52%}
+
+  /* ---------- WIDGETI (i njejti stil si ne mod) ---------- */
+  .pf-survival{
+    position:absolute; z-index:7; display:flex; flex-direction:column; align-items:center; gap:.12em;
+    white-space:nowrap; pointer-events:none; user-select:none; transform:translate(-50%,-50%);
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.72));
+    font-family:'Futura Extra Bold','Futura','Century Gothic','Segoe UI',Arial,sans-serif;
+    font-style:italic; line-height:1; color:#42ff68;
+  }
+  .pf-survival-main{position:relative;display:flex;align-items:baseline;justify-content:center;gap:.34em}
+  .pf-survival-label{font-size:.60em;font-weight:950;letter-spacing:-.025em;
+    -webkit-text-stroke:1px rgba(0,0,0,.72);text-shadow:0 2px 2px rgba(0,0,0,.86)}
+  .pf-survival-counter{position:relative;display:inline-block;line-height:1}
+  .pf-survival-value{position:relative;display:inline-block;font-size:1em;font-weight:950;letter-spacing:-.055em;
+    -webkit-text-stroke:1px rgba(0,0,0,.60);transform-origin:50% 60%}
+  .pf-survival-value i{margin-left:.04em;font-size:.58em;font-style:italic;vertical-align:.12em;letter-spacing:0}
+  .pf-survival-status-wrap{display:flex;align-items:center;justify-content:center;gap:.09em;margin-top:.10em;line-height:1}
+  .pf-survival-status{font-style:normal;margin-top:.12em;text-shadow:0 2px 4px rgba(0,0,0,.88),0 0 8px currentColor}
+  .pf-survival-emoji{display:inline-block;flex:none;align-self:center;line-height:1;
+    font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;
+    font-style:normal;font-weight:400;letter-spacing:0;text-shadow:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.48))}
+  .pf-survival-meter{width:3.0em;height:.07em;margin-top:.12em;border-radius:999px;overflow:hidden;
+    background:rgba(255,255,255,.14);box-shadow:0 1px 4px rgba(0,0,0,.65)}
+  .pf-survival-meter > div{height:100%;border-radius:inherit;transition:width 360ms cubic-bezier(.22,1,.36,1),background .24s}
+  .pf-survival.bg-pill{padding:.20em .42em .24em;border-radius:999px;border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px)}
+  .pf-survival.bg-card{padding:.25em .42em .30em;border-radius:.22em;border:1px solid rgba(255,255,255,.13);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 24px rgba(0,0,0,.32);backdrop-filter:blur(10px)}
+  .pf-uppercase .pf-survival-value,.pf-uppercase .pf-survival-status,.pf-uppercase .pf-survival-label{text-transform:uppercase}
+
+  /* ---------- FX ---------- */
+  .fx-neon .pf-survival-value,.fx-neon .pf-survival-status{text-shadow:0 0 .06em #fff,0 0 .18em currentColor,0 0 .42em currentColor,0 0 .9em currentColor}
+  .fx-chrome .pf-survival-value,.fx-chrome .pf-survival-status{
+    background:linear-gradient(180deg,#ffffff 0%,#dfe8f2 16%,#8e9cad 37%,#ffffff 49%,#5c6875 61%,#c3ced9 76%,#f6faff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1.2px rgba(0,0,0,.55);
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+  .fx-gold .pf-survival-value,.fx-gold .pf-survival-status{
+    background:linear-gradient(180deg,#fff6cf 0%,#ffd76a 26%,#b8801d 52%,#ffe9a3 66%,#8a5c10 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1px rgba(40,20,0,.6);
+    filter:drop-shadow(0 2px 6px rgba(255,190,60,.35))}
+  .fx-blood .pf-survival-value,.fx-blood .pf-survival-status{
+    background:linear-gradient(180deg,#ff6b6b 0%,#e01020 40%,#6d0510 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1.2px rgba(0,0,0,.75);
+    filter:drop-shadow(0 0 10px rgba(255,20,40,.45))}
+  .fx-extrude .pf-survival-value,.fx-extrude .pf-survival-status{
+    text-shadow:0 1px 0 rgba(0,0,0,.9),0 2px 0 rgba(0,0,0,.9),0 3px 0 rgba(0,0,0,.9),0 4px 0 rgba(0,0,0,.9),
+                0 5px 0 rgba(0,0,0,.85),0 8px 14px rgba(0,0,0,.75)}
+  .fx-glitch .pf-survival-value{animation:glitchRGB 1.6s steps(2,end) infinite}
+  @keyframes glitchRGB{
+    0%,84%{text-shadow:0 3px 3px rgba(0,0,0,.88);transform:none}
+    86%{text-shadow:-3px 0 0 #ff003c,3px 0 0 #00e5ff,0 3px 3px rgba(0,0,0,.88);transform:translateX(-2px)}
+    88%{text-shadow:3px 0 0 #ff003c,-3px 0 0 #00e5ff,0 3px 3px rgba(0,0,0,.88);transform:translateX(2px)}
+    90%{text-shadow:-2px 0 0 #ff003c,2px 0 0 #00e5ff;transform:none}
+    92%{text-shadow:0 3px 3px rgba(0,0,0,.88);transform:none}
+  }
+  .fx-flicker .pf-survival-value,.fx-flicker .pf-survival-status{animation:flick 2.4s infinite}
+  @keyframes flick{0%,100%{opacity:1}4%{opacity:.35}6%{opacity:1}42%{opacity:1}44%{opacity:.45}45%{opacity:1}
+    72%{opacity:.9}73%{opacity:.3}74%{opacity:1}}
+  .pulse-on .pf-survival-value{animation:tick 360ms cubic-bezier(.2,1.35,.4,1)}
+  @keyframes tick{0%{transform:scale(1)}38%{transform:scale(1.075)}100%{transform:scale(1)}}
+  .pulse-status .pf-survival-status{animation:pop 430ms cubic-bezier(.2,1.3,.35,1)}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.10)}100%{transform:scale(1)}}
+  .heartbeat{animation:hb var(--hb,1.15s) ease-in-out infinite}
+  @keyframes hb{0%,100%{transform:translate(-50%,-50%) scale(1)}
+    14%{transform:translate(-50%,-50%) scale(calc(1 + var(--hbScale,0.03)))}
+    28%{transform:translate(-50%,-50%) scale(1.004)}
+    42%{transform:translate(-50%,-50%) scale(calc(1 + var(--hbScale,0.03) * 0.65))}
+    56%{transform:translate(-50%,-50%) scale(1)}}
+  .shake{animation:shk 390ms ease-out}
+  @keyframes shk{0%,100%{transform:translate(-50%,-50%)}20%{transform:translate(calc(-50% - 5px),-50%)}
+    45%{transform:translate(calc(-50% + 4px),-50%)}70%{transform:translate(calc(-50% - 2px),-50%)}}
+  .impact-text{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:74px;font-weight:950;
+    font-family:'Futura Extra Bold','Segoe UI',Arial,sans-serif;color:#fff;text-shadow:0 0 24px rgba(255,40,40,.9);
+    pointer-events:none;animation:imp 900ms ease-out forwards}
+  @keyframes imp{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
+
+  /* vignette + flash */
+  #vignette{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s ease;
+    background:radial-gradient(120% 90% at 50% 50%, transparent 38%, rgba(120,0,0,.28) 70%, rgba(160,0,0,.72) 100%)}
+  #flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:rgba(255,30,30,.42)}
+  #flash.go{animation:fl 460ms ease-out}
+  @keyframes fl{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+
+  /* ---------- PANELI ---------- */
+  #panel{width:392px;flex:none;height:100%;overflow-y:auto;background:linear-gradient(#0d1119,#0a0d13);
+    border-left:1px solid var(--line);padding:14px 14px 60px}
+  #panel::-webkit-scrollbar{width:9px}#panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:9px}
+  h1{font-size:15px;margin:0 0 2px;letter-spacing:.02em}
+  .sub{font-size:11px;color:var(--dim);margin-bottom:12px;line-height:1.5}
+  .sec{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+  .sec > h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ffb066;margin:0;padding:9px 11px;
+    background:rgba(255,138,30,.07);border-bottom:1px solid var(--line);cursor:pointer;display:flex;justify-content:space-between}
+  .sec > .body{padding:10px 11px}
+  .sec.collapsed > .body{display:none}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:11px;color:var(--dim);flex:1;min-width:0}
+  .val{font-size:11px;color:#fff;font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:#222a38;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);
+    border:2px solid #0a0d13;cursor:pointer}
+  input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:6px;background:#0a0d13;cursor:pointer;padding:1px}
+  select,input[type=text]{background:#121826;color:#fff;border:1px solid var(--line);border-radius:7px;
+    padding:6px 8px;font-size:12px;font-family:inherit;width:100%}
+  input[type=text].short{width:78px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .btn{background:#1b2231;color:#dce5f2;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:11.5px;
+    cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{background:#25304a}
+  .btn.acc{background:linear-gradient(#ff9a34,#ff7a12);border-color:#ffb567;color:#180d00;font-weight:700}
+  .btn.on{background:linear-gradient(#2e6b3f,#1f4a2c);border-color:#4ecb71;color:#dfffe8}
+  .btn.danger{background:#4a1220;border-color:#8d2440;color:#ffd8e1}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chk{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#c9d5e4;margin:5px 0;cursor:pointer}
+  .chk input{accent-color:#ff8a1e;width:14px;height:14px}
+  .mini-in{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .mini-in span{font-size:10.5px;color:#7d8ba0;width:70px;flex:none}
+  .note{font-size:10.5px;color:#697689;line-height:1.5;margin-top:6px}
+  #json{width:100%;height:132px;background:#070a10;border:1px solid var(--line);border-radius:9px;color:#8ee8a6;
+    font-family:ui-monospace,Consolas,monospace;font-size:10.5px;padding:8px;resize:vertical}
+  @media (max-width:1000px){
+    body{flex-direction:column}
+    #panel{width:100%;height:52%;border-left:none;border-top:1px solid var(--line)}
+    #stage{height:48%}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="game"></div>
+  <div class="ghost-car"></div>
+  <div id="stageTag">Simulim i lojës — jo HUD i vërtetë</div>
+  <div id="vignette"></div>
+  <div id="flash"></div>
+
+  <div class="pf-survival" id="sv">
+    <div class="pf-survival-main">
+      <span class="pf-survival-label" id="svLabel">SURVIVAL CHANCE</span>
+      <span class="pf-survival-counter">
+        <span class="pf-survival-value" id="svValue">100<i>%</i></span>
+      </span>
+    </div>
+    <div class="pf-survival-status-wrap" id="svStatusWrap">
+      <span class="pf-survival-emoji" id="svEmoji">😎</span>
+      <div class="pf-survival-status" id="svStatus">SAFE</div>
+    </div>
+    <div class="pf-survival-meter" id="svMeter"><div id="svMeterFill"></div></div>
+  </div>
+
+  <div id="stageHint">Kliko <b>CRASH</b> për të provuar dramatizmin. Kliko <b>REPAIR</b> për t'u kthyer në 100%.</div>
+</div>
+
+<aside id="panel">
+  <h1>HUD PRO · Survival Lab</h1>
+  <div class="sub">Provo lirshëm. Kur t'pëlqejë një kombinim, shtyp <b>KOPJO JSON</b> dhe ma dërgo — e fus direkt në mod.</div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Simulimi <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Survival %</label><span class="val" id="valOut">100</span></div>
+      <input type="range" id="simSpeed" min="0" max="100" value="0" style="margin:2px 0 10px">
+      <div class="grid3">
+        <button class="btn danger" id="btnCrash">CRASH</button>
+        <button class="btn" id="btnSmallHit">Hit i vogël</button>
+        <button class="btn" id="btnRepair">REPAIR</button>
+      </div>
+      <div class="note">Duke lëvizur “Survival %” sheh statusin, ngjyrën, emojin dhe dramatizmin duke ndryshuar live.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Fonti &amp; Madhësia <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Fonti</label>
+        <select id="font" style="width:180px">
+          <option value="futura">Futura Extra Bold (i ngulitur)</option>
+          <option value="narrow">Arial Narrow (i vjetri)</option>
+          <option value="segoe">Segoe UI Black (Windows)</option>
+          <option value="arialblack">Arial Black (Windows)</option>
+          <option value="impact">Impact (Windows)</option>
+        </select></div>
+      <div class="row"><label>Madhësia</label><input type="range" id="size" min="28" max="110" value="54"><span class="val" id="sizeOut">54px</span></div>
+      <div class="row"><label>Pesha</label><input type="range" id="weight" min="400" max="950" step="50" value="900"><span class="val" id="weightOut">900</span></div>
+      <div class="row"><label>Spacing (tracking)</label><input type="range" id="track" min="-0.06" max="0.24" step="0.01" value="-0.055"><span class="val" id="trackOut">-0.06</span></div>
+      <div class="row"><label>Skew</label><input type="range" id="skew" min="-20" max="20" value="0"><span class="val" id="skewOut">0°</span></div>
+      <div class="row"><label>Italic</label><input type="checkbox" id="italic" checked></div>
+      <div class="row"><label>UPPERCASE</label><input type="checkbox" id="upper" checked></div>
+      <div class="note">Futura Extra Bold është i ngulitur në mod (Jost Heavy, SIL OFL) — punon pa instalim. Të tjerët janë fonte sistemi të Windows-it.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Efekti i tekstit (drama) <span>▾</span></h2>
+    <div class="body">
+      <div class="chips" id="fxChips">
+        <button class="btn on" data-fx="none">Normal</button>
+        <button class="btn" data-fx="neon">Neon</button>
+        <button class="btn" data-fx="chrome">Chrome</button>
+        <button class="btn" data-fx="gold">Gold</button>
+        <button class="btn" data-fx="blood">Blood</button>
+        <button class="btn" data-fx="extrude">3D</button>
+        <button class="btn" data-fx="glitch">Glitch</button>
+        <button class="btn" data-fx="flicker">Flicker</button>
+      </div>
+      <div class="note">Këto janë thjesht CSS — punojnë offline, pa fonte ekstra.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Tekstet e statusit (paketat) <span>▾</span></h2>
+    <div class="body">
+      <div class="chips" id="packChips">
+        <button class="btn on" data-pack="classic">Classic</button>
+        <button class="btn" data-pack="hollywood">Dramatik</button>
+        <button class="btn" data-pack="streamer">Streamer</button>
+        <button class="btn" data-pack="albanian">Shqip</button>
+        <button class="btn" data-pack="hardcore">Hardcore</button>
+        <button class="btn" data-pack="custom">Custom</button>
+      </div>
+      <div class="mini-in"><span>Sigurt</span><input type="color" id="cSafe" value="#42ff68"><input type="text" id="tSafe" value="SAFE"></div>
+      <div class="mini-in"><span>Kujdes</span><input type="color" id="cCaution" value="#ffd23f"><input type="text" id="tCaution" value="CAUTION"></div>
+      <div class="mini-in"><span>Rrezik</span><input type="color" id="cDanger" value="#ff7a2f"><input type="text" id="tDanger" value="DANGER"></div>
+      <div class="mini-in"><span>Kritik</span><input type="color" id="cCritical" value="#ff334d"><input type="text" id="tCritical" value="CRITICAL"></div>
+      <div class="mini-in"><span>Fundi</span><input type="color" id="cDead" value="#b3122b"><input type="text" id="tDead" value="NO CHANCE"></div>
+      <label class="chk"><input type="checkbox" id="rotate"> Rrotullo frazat (ndryshon çdo 3s)</label>
+      <label class="chk"><input type="checkbox" id="blend" checked> Ngjyra kalojnë butësisht midis statuseve</label>
+      <div class="note">Paketa “Dramatik” ka shumë fraza për çdo nivel — me rrotullim jep më shumë dramë.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Kufijtë (thresholds) &amp; Emoji <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Sigurt deri në…</label><input type="range" id="thCaution" min="20" max="95" value="80"><span class="val" id="thCautionOut">80</span></div>
+      <div class="row"><label>Kujdes deri në…</label><input type="range" id="thDanger" min="10" max="90" value="55"><span class="val" id="thDangerOut">55</span></div>
+      <div class="row"><label>Rrezik deri në…</label><input type="range" id="thCritical" min="1" max="60" value="20"><span class="val" id="thCriticalOut">20</span></div>
+      <div class="row" style="margin-top:8px"><label>Emoji automatik</label><input type="checkbox" id="emojiOn" checked></div>
+      <div class="grid3" style="margin-top:6px">
+        <input type="text" class="short" id="eSafe" value="😎">
+        <input type="text" class="short" id="eCaution" value="😬">
+        <input type="text" class="short" id="eDanger" value="😰">
+        <input type="text" class="short" id="eCritical" value="😵">
+        <input type="text" class="short" id="eDead" value="💀">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Drama &amp; Efekte ekrani <span>▾</span></h2>
+    <div class="body">
+      <label class="chk"><input type="checkbox" id="heartbeat" checked> Rrahje zemre (shpejtohet kur bie %)</label>
+      <div class="row"><label>Forca e rrahjes</label><input type="range" id="hbAmt" min="0" max="100" value="55"><span class="val" id="hbAmtOut">55</span></div>
+      <label class="chk"><input type="checkbox" id="vignetteOn" checked> Vignette e kuqe kur je në rrezik</label>
+      <div class="row"><label>Forca e vignette</label><input type="range" id="vigAmt" min="0" max="100" value="70"><span class="val" id="vigAmtOut">70</span></div>
+      <label class="chk"><input type="checkbox" id="shakeOn" checked> Dridhje në përplasje</label>
+      <label class="chk"><input type="checkbox" id="flashOn" checked> Flash i kuq kur bie një nivel statusi</label>
+      <label class="chk"><input type="checkbox" id="pulseOn" checked> Puls i numrit kur ndryshon %</label>
+      <label class="chk"><input type="checkbox" id="statusPulse" checked> Pop i statusit kur ndryshon</label>
+      <label class="chk"><input type="checkbox" id="meter" checked> Mini meter (shiriti poshtë)</label>
+      <label class="chk"><input type="checkbox" id="labelOn" checked> Titulli “SURVIVAL CHANCE”</label>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Presetet <span>▾</span></h2>
+    <div class="body">
+      <div class="grid3">
+        <button class="btn" data-preset="pro">Pro / Clean</button>
+        <button class="btn acc" data-preset="hollywood">Hollywood</button>
+        <button class="btn" data-preset="streamer">Streamer</button>
+        <button class="btn" data-preset="hardcore">Hardcore</button>
+        <button class="btn" data-preset="shqip">Shqip</button>
+        <button class="btn" data-preset="arcade">Arcade</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 onclick="this.parentNode.classList.toggle('collapsed')">Kodi (JSON) <span>▾</span></h2>
+    <div class="body">
+      <textarea id="json" readonly></textarea>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn acc" id="btnCopy">KOPJO JSON</button>
+        <button class="btn" id="btnReset">RESET</button>
+      </div>
+      <div class="note">Ky JSON është saktësisht ai që do të shkojë në <b>creatorpack.json</b> të mod-it.</div>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ paketat e teksteve ============ */
+  var PACKS = {
+    classic:{safe:["SAFE"],caution:["CAUTION"],danger:["DANGER"],critical:["CRITICAL"],dead:["NO CHANCE"]},
+    hollywood:{
+      safe:["STEADY","HOLDING","ALL GOOD"],
+      caution:["TENSE","ON EDGE","SHAKY"],
+      danger:["IN PERIL","ONE MORE HIT","DON'T PUSH IT"],
+      critical:["LAST BREATH","BARELY ALIVE","CRITICAL"],
+      dead:["WRECKED","GAME OVER","IT'S OVER"]
+    },
+    streamer:{
+      safe:["WE'RE GOOD","CHILL","EZ"],
+      caution:["UH OH","HMMMM","SUS"],
+      danger:["OH NO","IT'S COOKING","NOT GREAT"],
+      critical:["GG","COOKED","ONE HP"],
+      dead:["SKILL ISSUE","R.I.P.","SEND IT"]
+    },
+    albanian:{
+      safe:["SIGURT","MIRE","S'KA GJO"],
+      caution:["KUJDES","KOKEN","MASA"],
+      danger:["RREZIK","MOS E NGUJ","AAAH"],
+      critical:["KRITIK","PER FUND","FUNDI AFER"],
+      dead:["KAQ KISH","U SHKATERROVE","LOJA MBAROI"]
+    },
+    hardcore:{
+      safe:["OK"],caution:["HMM"],danger:["OUCH"],critical:["PRAY"],dead:["DOOMED"]
+    }
+  };
+  var EMOJI = {safe:"😎",caution:"😬",danger:"😰",critical:"😵",dead:"💀"};
+  var COLORS = {safe:"#42ff68",caution:"#ffd23f",danger:"#ff7a2f",critical:"#ff334d",dead:"#b3122b"};
+
+  var DEFAULTS = {
+    value:100, font:"futura", size:54, weight:900, track:-0.055, skew:0, italic:true, upper:true,
+    fx:"none", pack:"classic", theta:80, thd:55, thc:20,
+    tSafe:"SAFE", tCaution:"CAUTION", tDanger:"DANGER", tCritical:"CRITICAL", tDead:"NO CHANCE",
+    cSafe:"#42ff68", cCaution:"#ffd23f", cDanger:"#ff7a2f", cCritical:"#ff334d", cDead:"#b3122b",
+    eSafe:"😎", eCaution:"😬", eDanger:"😰", eCritical:"😵", eDead:"💀",
+    emojiOn:true, rotate:false, blend:true, heartbeat:true, hbAmt:55, vignetteOn:true, vigAmt:70,
+    shakeOn:true, flashOn:true, pulseOn:true, statusPulse:true, meter:true, labelOn:true,
+    statusSize:0.30, statusSpacing:0.14, statusWeight:900, bg:"none", posX:50, posY:26
+  };
+  var S = Object.assign({}, DEFAULTS);
+
+  var $ = function(id){ return document.getElementById(id); };
+  var sv = $("sv"), elVal = $("svValue"), elStatus = $("svStatus"), elEmoji = $("svEmoji"),
+      elLabel = $("svLabel"), elWrap = $("svStatusWrap"), elMeter = $("svMeter"), elMeterFill = $("svMeterFill");
+
+  var display = S.value, target = S.value, rotIndex = 0, lastState = null, rafPending = false, rotTimer = null;
+
+  /* ============ statusi & ngjyra ============ */
+  function stateOf(v){
+    if (v <= 0) return "dead";
+    if (v <= S.thc) return "critical";
+    if (v <= S.thd) return "danger";
+    if (v <= S.theta) return "caution";
+    return "safe";
+  }
+  function hexToRgb(h){ h = (h||"#000").replace("#",""); if (h.length===3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    var n = parseInt(h,16); return [ (n>>16)&255, (n>>8)&255, n&255 ]; }
+  function mix(a,b,t){ var A=hexToRgb(a),B=hexToRgb(b);
+    return "rgb("+Math.round(A[0]+(B[0]-A[0])*t)+","+Math.round(A[1]+(B[1]-A[1])*t)+","+Math.round(A[2]+(B[2]-A[2])*t)+")"; }
+  function palette(){ return {safe:S.cSafe,caution:S.cCaution,danger:S.cDanger,critical:S.cCritical,dead:S.cDead}; }
+  function colorOf(v){
+    var p = palette();
+    if (!S.blend){
+      var st = stateOf(v);
+      return p[st];
+    }
+    // blend mes niveleve: safe->caution (theta..theta-25), caution->danger (thd..thd-20), danger->critical(thc..0)
+    if (v >= S.theta) return p.safe;
+    if (v >= S.thd)   return mix(p.caution, p.safe, (v - S.thd) / Math.max(1, S.theta - S.thd));
+    if (v >= S.thc)   return mix(p.danger, p.caution, (v - S.thc) / Math.max(1, S.thd - S.thc));
+    if (v > 0)        return mix(p.critical, p.danger, v / Math.max(1, S.thc));
+    return p.dead;
+  }
+  function phraseFor(st){
+    var pack = (S.pack === "custom") ? null : PACKS[S.pack];
+    var key = "t" + st.charAt(0).toUpperCase() + st.slice(1);
+    if (pack){ var arr = pack[st] || []; return arr[rotIndex % Math.max(1, arr.length)] || S[key]; }
+    return S[key];
+  }
+
+  /* ============ render ============ */
+  function render(){
+    var v = Math.max(0, Math.min(100, display));
+    var st = stateOf(v), col = colorOf(v);
+
+    var fam = {futura:"'Futura Extra Bold','Futura','Century Gothic','Segoe UI',Arial,sans-serif",
+               narrow:"'Arial Narrow','Segoe UI',Arial,sans-serif",
+               segoe:"'Segoe UI Black','Segoe UI',system-ui,sans-serif",
+               arialblack:"'Arial Black',Arial,sans-serif",
+               impact:"Impact,'Haettenschweiler','Arial Narrow Bold',sans-serif"}[S.font];
+
+    sv.style.left = S.posX + "%";
+    sv.style.top  = S.posY + "%";
+    sv.style.fontFamily = fam;
+    sv.style.fontSize = S.size + "px";
+    sv.style.fontWeight = S.weight;
+    sv.style.fontStyle = S.italic ? "italic" : "normal";
+    sv.style.color = col;
+    sv.style.transform = "translate(-50%,-50%) skewX(" + S.skew + "deg)";
+    sv.classList.toggle("pf-uppercase", !!S.upper);
+    sv.classList.toggle("bg-pill", S.bg === "pill");
+    sv.classList.toggle("bg-card", S.bg === "card");
+    sv.className = sv.className.replace(/\bfx-\S+/g,"").trim();
+    if (S.fx !== "none") sv.classList.add("fx-" + S.fx);
+
+    elVal.firstChild.nodeValue = Math.round(v);
+    elVal.style.letterSpacing = S.track + "em";
+    elVal.style.webkitTextStroke = Math.max(0, 1) + "px rgba(0,0,0,.6)";
+    elVal.style.textShadow = (S.fx === "neon") ? "" : "0 3px 3px rgba(0,0,0,.88), 0 0 10px " + col;
+
+    elLabel.style.display = S.labelOn ? "" : "none";
+    elStatus.textContent = phraseFor(st);
+    elStatus.style.fontSize = S.statusSize + "em";
+    elStatus.style.letterSpacing = S.statusSpacing + "em";
+    elStatus.style.fontWeight = S.statusWeight;
+    elEmoji.style.display = S.emojiOn ? "" : "none";
+    elEmoji.textContent = S["e" + st.charAt(0).toUpperCase() + st.slice(1)];
+    elMeter.style.display = S.meter ? "" : "none";
+    elMeterFill.style.width = v + "%";
+    elMeterFill.style.background = col;
+
+    // heartbeat: sa më i ulët %, aq më shpejt
+    if (S.heartbeat && v < S.theta + 15){
+      var t = Math.max(0, Math.min(1, (S.theta + 15 - v) / (S.theta + 15)));
+      var period = 1.25 - 0.85 * t;                    // 1.25s -> 0.40s
+      sv.style.setProperty("--hb", period.toFixed(2) + "s");
+      var amt = (S.hbAmt / 100) * 0.06 * (0.35 + t);
+      sv.style.setProperty("--hbScale", amt.toFixed(3));
+      sv.classList.add("heartbeat");
+    } else sv.classList.remove("heartbeat");
+
+    // vignette
+    var vig = 0;
+    if (S.vignetteOn && v < S.theta){
+      vig = ((S.theta - v) / Math.max(1, S.theta)) * (S.vigAmt / 100);
+    }
+    $("vignette").style.opacity = vig.toFixed(3);
+
+    if (st !== lastState && lastState !== null && S.flashOn && (st === "critical" || st === "dead")){
+      var fl = $("flash"); fl.classList.remove("go"); void fl.offsetWidth; fl.classList.add("go");
+    }
+    lastState = st;
+    puffJSON();
+  }
+
+  function puffJSON(){
+    var o = {
+      survivalFontFamily: S.font, survivalSize: S.size, survivalFontWeight: S.weight,
+      survivalTracking: S.track, survivalSkew: S.skew, survivalItalic: S.italic, survivalUppercase: S.upper,
+      survivalTextFx: S.fx, survivalStatusPack: S.pack,
+      survivalStatusColors: {safe:S.cSafe,caution:S.cCaution,danger:S.cDanger,critical:S.cCritical,dead:S.cDead},
+      survivalStatusTexts: {safe:S.tSafe,caution:S.tCaution,danger:S.tDanger,critical:S.tCritical,dead:S.tDead},
+      survivalStatusBlend: S.blend, survivalStatusRotate: S.rotate,
+      survivalThresholds: {caution:S.theta, danger:S.thd, critical:S.thc},
+      survivalEmoji: {safe:S.eSafe,caution:S.eCaution,danger:S.eDanger,critical:S.eCritical,dead:S.eDead},
+      survivalDrama: {heartbeat:S.heartbeat,hbAmt:S.hbAmt,vignette:S.vignetteOn,vignetteAmt:S.vigAmt,
+                      shake:S.shakeOn,flash:S.flashOn,pulse:S.pulseOn,statusPulse:S.statusPulse},
+      survivalLayout: {label:S.labelOn, meter:S.meter, background:S.bg, posX:S.posX, posY:S.posY}
+    };
+    $("json").value = JSON.stringify(o, null, 1);
+  }
+
+  /* ============ loop ============ */
+  function tick(){
+    display += (target - display) * 0.22;
+    if (Math.abs(target - display) < 0.05) display = target;
+    render();
+    requestAnimationFrame(tick);
+  }
+
+  /* ============ kontrollat ============ */
+  function bind(id, key, fn){
+    var el = $(id);
+    el.addEventListener("input", function(){
+      var v = (el.type === "checkbox") ? el.checked : (el.type === "range" ? parseFloat(el.value) : el.value);
+      S[key] = v; if (fn) fn(v); render();
+    });
+  }
+  bind("size","size", function(v){ $("sizeOut").textContent = v + "px"; });
+  bind("weight","weight", function(v){ $("weightOut").textContent = v; });
+  bind("track","track", function(v){ $("trackOut").textContent = v.toFixed(2); });
+  bind("skew","skew", function(v){ $("skewOut").textContent = v + "°"; });
+  bind("font","font"); bind("italic","italic"); bind("upper","upper");
+  bind("thCaution","theta", function(v){ $("thCautionOut").textContent = v; });
+  bind("thDanger","thd", function(v){ $("thDangerOut").textContent = v; });
+  bind("thCritical","thc", function(v){ $("thCriticalOut").textContent = v; });
+  bind("emojiOn","emojiOn"); bind("heartbeat","heartbeat"); bind("hbAmt","hbAmt", function(v){ $("hbAmtOut").textContent = v; });
+  bind("vignetteOn","vignetteOn"); bind("vigAmt","vigAmt", function(v){ $("vigAmtOut").textContent = v; });
+  bind("shakeOn","shakeOn"); bind("flashOn","flashOn"); bind("pulseOn","pulseOn"); bind("statusPulse","statusPulse");
+  bind("meter","meter"); bind("labelOn","labelOn"); bind("rotate","rotate", startRotate); bind("blend","blend");
+
+  ["Safe","Caution","Danger","Critical","Dead"].forEach(function(k){
+    var lk = k.toLowerCase();
+    $("t"+k).addEventListener("input", function(){ S["t"+k] = this.value; if (S.pack !== "custom") setPack("custom"); render(); });
+    $("c"+k).addEventListener("input", function(){ S["c"+k] = this.value; render(); });
+    $("e"+k).addEventListener("input", function(){ S["e"+k] = this.value; render(); });
+  });
+
+  function setPack(name){
+    S.pack = name;
+    [].forEach.call(document.querySelectorAll("#packChips .btn"), function(b){ b.classList.toggle("on", b.dataset.pack === name); });
+    if (name !== "custom" && PACKS[name]){
+      var p = PACKS[name];
+      S.tSafe = p.safe[0]; S.tCaution = p.caution[0]; S.tDanger = p.danger[0];
+      S.tCritical = p.critical[0]; S.tDead = p.dead[0];
+      $("tSafe").value = S.tSafe; $("tCaution").value = S.tCaution; $("tDanger").value = S.tDanger;
+      $("tCritical").value = S.tCritical; $("tDead").value = S.tDead;
+    }
+    rotIndex = 0; render();
+  }
+  [].forEach.call(document.querySelectorAll("#packChips .btn"), function(b){
+    b.addEventListener("click", function(){ setPack(b.dataset.pack); });
+  });
+
+  [].forEach.call(document.querySelectorAll("#fxChips .btn"), function(b){
+    b.addEventListener("click", function(){
+      S.fx = b.dataset.fx;
+      [].forEach.call(document.querySelectorAll("#fxChips .btn"), function(x){ x.classList.toggle("on", x === b); });
+      render();
+    });
+  });
+
+  function startRotate(){
+    if (rotTimer) { clearInterval(rotTimer); rotTimer = null; }
+    if (S.rotate) rotTimer = setInterval(function(){ rotIndex++; render(); }, 3000);
+    else rotIndex = 0;
+  }
+  bind("rotate","rotate", startRotate);
+
+  $("simSpeed").addEventListener("input", function(){ target = parseFloat(this.value); $("valOut").textContent = Math.round(target); });
+
+  function hit(amount){
+    target = Math.max(0, target - amount);
+    $("simSpeed").value = target; $("valOut").textContent = Math.round(target);
+    if (S.shakeOn){ sv.classList.remove("shake"); void sv.offsetWidth; sv.classList.add("shake"); }
+    if (S.pulseOn){ sv.classList.remove("pulse-on"); void sv.offsetWidth; sv.classList.add("pulse-on"); }
+    if (S.statusPulse){ sv.classList.remove("pulse-status"); void sv.offsetWidth; sv.classList.add("pulse-status"); }
+    var t = document.createElement("div"); t.className = "impact-text"; t.textContent = "💥 -" + Math.round(amount);
+    document.getElementById("stage").appendChild(t); setTimeout(function(){ t.remove(); }, 900);
+    render();
+  }
+  $("btnCrash").addEventListener("click", function(){ hit(28 + Math.random() * 34); });
+  $("btnSmallHit").addEventListener("click", function(){ hit(7 + Math.random() * 12); });
+  $("btnRepair").addEventListener("click", function(){
+    target = 100; $("simSpeed").value = 100; $("valOut").textContent = 100; render();
+  });
+
+  /* ============ presetet ============ */
+  var PRESETS = {
+    pro:      {font:"futura",size:54,weight:900,track:-0.055,skew:0,italic:true,upper:true,fx:"none",pack:"classic",
+               heartbeat:false,vignetteOn:false,shakeOn:false,flashOn:false,blend:true,meter:false,emojiOn:true,
+               cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b"},
+    hollywood:{font:"futura",size:62,weight:900,track:0.02,skew:-4,italic:true,upper:true,fx:"chrome",pack:"hollywood",
+               heartbeat:true,hbAmt:60,vignetteOn:true,vigAmt:75,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:false,
+               cSafe:"#e8f4ff",cCaution:"#ffd23f",cDanger:"#ff8a2f",cCritical:"#ff2233",cDead:"#8c0f18",rotate:true},
+    streamer: {font:"segoe",size:58,weight:900,track:-0.02,skew:0,italic:false,upper:true,fx:"glitch",pack:"streamer",
+               heartbeat:true,hbAmt:45,vignetteOn:true,vigAmt:55,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
+               cSafe:"#7dff9b",cCaution:"#ffe14d",cDanger:"#ff8a1e",cCritical:"#ff2d55",cDead:"#7a0b1c",rotate:true},
+    hardcore: {font:"futura",size:66,weight:950,track:0.06,skew:0,italic:false,upper:true,fx:"blood",pack:"hardcore",
+               heartbeat:true,hbAmt:80,vignetteOn:true,vigAmt:90,shakeOn:true,flashOn:true,blend:false,meter:false,emojiOn:false,
+               cSafe:"#e9eef3",cCaution:"#ffb347",cDanger:"#ff4423",cCritical:"#e00028",cDead:"#5c0007",rotate:false},
+    shqip:    {font:"futura",size:56,weight:900,track:0.0,skew:-3,italic:true,upper:true,fx:"neon",pack:"albanian",
+               heartbeat:true,hbAmt:55,vignetteOn:true,vigAmt:65,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
+               cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b",rotate:false},
+    arcade:   {font:"impact",size:64,weight:900,track:0.03,skew:0,italic:false,upper:true,fx:"extrude",pack:"streamer",
+               heartbeat:false,vignetteOn:false,shakeOn:true,flashOn:true,blend:false,meter:true,emojiOn:true,
+               cSafe:"#39ff14",cCaution:"#ffe600",cDanger:"#ff9100",cCritical:"#ff1744",cDead:"#7b00ff",rotate:true}
+  };
+
+  function applyPreset(name){
+    var p = PRESETS[name]; if (!p) return;
+    Object.assign(S, p);
+    // sinkronizo UI
+    $("font").value = S.font; $("size").value = S.size; $("weight").value = S.weight;
+    $("track").value = S.track; $("skew").value = S.skew; $("italic").checked = !!S.italic; $("upper").checked = !!S.upper;
+    $("sizeOut").textContent = S.size + "px"; $("weightOut").textContent = S.weight;
+    $("trackOut").textContent = (+S.track).toFixed(2); $("skewOut").textContent = S.skew + "°";
+    $("heartbeat").checked = !!S.heartbeat; $("vignetteOn").checked = !!S.vignetteOn; $("vigAmt").value = S.vigAmt;
+    $("shakeOn").checked = !!S.shakeOn; $("flashOn").checked = !!S.flashOn;
+    $("meter").checked = !!S.meter; $("emojiOn").checked = !!S.emojiOn; $("blend").checked = !!S.blend;
+    $("rotate").checked = !!S.rotate; $("hbAmt").value = S.hbAmt;
+    if (S.cSafe){ $("cSafe").value = S.cSafe; $("cCaution").value = S.cCaution; $("cDanger").value = S.cDanger;
+                  $("cCritical").value = S.cCritical; $("cDead").value = S.cDead; }
+    setPack(S.pack || "classic");
+    [].forEach.call(document.querySelectorAll("#fxChips .btn"), function(x){ x.classList.toggle("on", x.dataset.fx === S.fx); });
+    startRotate();
+    // shkrep një hit dramatik për ta ndjerë
+    target = 100; display = 100; $("simSpeed").value = 100; $("valOut").textContent = 100;
+    setTimeout(function(){ hit(24 + Math.random() * 20); }, 220);
+    render();
+  }
+  [].forEach.call(document.querySelectorAll("[data-preset]"), function(b){
+    b.addEventListener("click", function(){ applyPreset(b.dataset.preset); });
+  });
+
+  /* ============ kopjo / reset ============ */
+  $("btnCopy").addEventListener("click", function(){
+    var t = $("json"); t.select(); t.setSelectionRange(0, 99999);
+    var done = false;
+    try { done = document.execCommand("copy"); } catch(e){}
+    if (navigator.clipboard) { navigator.clipboard.writeText(t.value).catch(function(){}); done = true; }
+    var b = this, old = b.textContent; b.textContent = done ? "U KOPJUA ✓" : "ZGJIDH MANUALISHT";
+    setTimeout(function(){ b.textContent = old; }, 1500);
+  });
+  $("btnReset").addEventListener("click", function(){
+    Object.assign(S, DEFAULTS);
+    location.reload();
+  });
+
+  /* start */
+  setPack("classic");
+  render();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
