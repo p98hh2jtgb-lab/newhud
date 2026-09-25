@@ -1,7 +1,7 @@
 # HUD PRO — ide & roadmap
 
-> **v5.2 u realizua** (Bangers, paketat angleze, 5 ngjyrat, FX dramatike, zë, STREAM MODE, GAME OVER).
-> Detajet: `CHANGELOG.md`. Poshtë mbetet lista e ideve për **v5.3**.
+> **v5.2 / v5.2.1 u realizuan** (Bangers kudo, paketat angleze, 5 ngjyrat, FX dramatike, zë, STREAM MODE,
+> vulë “TOTALED”, pa ekran të kuq). Detajet: `CHANGELOG.md`. Poshtë mbetet lista për **v5.3**.
 
 
 > Kjo është ajo që propozoj pasi e lexova modin v5.1.

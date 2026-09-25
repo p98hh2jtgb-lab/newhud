@@ -111,16 +111,19 @@
   @keyframes imp{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}22%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
     100%{opacity:0;transform:translate(-50%,-50%) scale(1.4)}}
 
-  /* vignette + flash */
-  #vignette{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s ease;
-    background:radial-gradient(120% 90% at 50% 50%, transparent 38%, rgba(120,0,0,.28) 70%, rgba(160,0,0,.72) 100%)}
+  /* aureola dramatike (lokale, rreth HUD-it — nuk skuq ekranin) + flash */
+  .pf-survival-aura{position:absolute;left:50%;top:50%;width:190%;height:250%;transform:translate(-50%,-50%);
+    pointer-events:none;z-index:0;background:radial-gradient(closest-side,currentColor 0%,rgba(0,0,0,0) 72%);
+    filter:blur(11px);opacity:0;transition:opacity .4s ease;animation:auravar var(--hb,1.25s) ease-in-out infinite}
+  @keyframes auravar{0%,100%{opacity:calc(var(--aura,0) * .45)}50%{opacity:var(--aura,0)}}
   #flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:rgba(255,30,30,.42)}
-  #gameover{position:absolute;left:0;right:0;top:34%;z-index:8;text-align:center;pointer-events:none;display:none;
-    font-family:'Bangers HUD','Bangers',Impact,sans-serif;font-size:min(15vw,150px);line-height:1;color:#fff;letter-spacing:.03em;
-    -webkit-text-stroke:3px rgba(0,0,0,.58);text-shadow:0 0 34px rgba(255,0,30,.9),0 10px 26px rgba(0,0,0,.85)}
-  #gameover.show{display:block;animation:go 4.5s ease-out forwards}
-  @keyframes go{0%{opacity:0;transform:scale(2.6)}12%{opacity:1;transform:scale(1)}18%{transform:scale(1.06)}
-    24%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
+  /* v5.2.1: vula brenda HUD-it, jo "GAME OVER" gjigant mbi lojën */
+  .pf-survival-verdict{margin-top:.14em;padding:.10em .34em .14em;font-size:.34em;font-weight:400;letter-spacing:.10em;
+    text-transform:uppercase;color:#fff;background:linear-gradient(180deg,rgba(190,10,30,.92),rgba(120,0,16,.92));
+    border:1px solid rgba(255,120,120,.55);border-radius:.22em;box-shadow:0 3px 12px rgba(0,0,0,.55),0 0 14px rgba(255,30,50,.45);
+    text-shadow:0 2px 3px rgba(0,0,0,.75);transform-origin:50% 50%;animation:verdictanim 3s cubic-bezier(.2,1.1,.3,1) forwards}
+  @keyframes verdictanim{0%{opacity:0;transform:scale(.4) rotate(-6deg)}12%{opacity:1;transform:scale(1.14) rotate(2deg)}
+    20%{transform:scale(1) rotate(0)}78%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
   #flash.go{animation:fl 460ms ease-out}
   @keyframes fl{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
 
@@ -175,11 +178,10 @@
   <div class="ghost-car"></div>
   <div id="stageTag">Simulim i lojës — jo HUD i vërtetë</div>
   <button id="streamBadge">● STREAM MODE ON — kliko për me dalë</button>
-  <div id="vignette"></div>
   <div id="flash"></div>
-  <div id="gameover">GAME OVER</div>
 
   <div class="pf-survival" id="sv">
+    <div class="pf-survival-aura"></div>
     <div class="pf-survival-main">
       <span class="pf-survival-label" id="svLabel">SURVIVAL CHANCE</span>
       <span class="pf-survival-counter">
@@ -191,6 +193,7 @@
       <div class="pf-survival-status" id="svStatus">SAFE</div>
     </div>
     <div class="pf-survival-meter" id="svMeter"><div id="svMeterFill"></div></div>
+    <div class="pf-survival-verdict" id="svVerdict" style="display:none">TOTALED</div>
   </div>
 
   <div id="stageHint">Kliko <b>CRASH</b> për të provuar dramatizmin. Kliko <b>REPAIR</b> për t'u kthyer në 100%.</div>
@@ -262,10 +265,10 @@
         <button class="btn" data-pack="custom">Custom</button>
       </div>
       <div class="mini-in"><span>Sigurt</span><input type="color" id="cSafe" value="#42ff68"><input type="text" id="tSafe" value="STEADY"></div>
-      <div class="mini-in"><span>Kujdes</span><input type="color" id="cCaution" value="#ffd23f"><input type="text" id="tCaution" value="TENSE"></div>
-      <div class="mini-in"><span>Rrezik</span><input type="color" id="cDanger" value="#ff7a2f"><input type="text" id="tDanger" value="IN PERIL"></div>
-      <div class="mini-in"><span>Kritik</span><input type="color" id="cCritical" value="#ff334d"><input type="text" id="tCritical" value="LAST BREATH"></div>
-      <div class="mini-in"><span>Fundi</span><input type="color" id="cDead" value="#b3122b"><input type="text" id="tDead" value="WRECKED"></div>
+      <div class="mini-in"><span>Kujdes</span><input type="color" id="cCaution" value="#ffd23f"><input type="text" id="tCaution" value="CAREFUL"></div>
+      <div class="mini-in"><span>Rrezik</span><input type="color" id="cDanger" value="#ff7a2f"><input type="text" id="tDanger" value="DANGER"></div>
+      <div class="mini-in"><span>Kritik</span><input type="color" id="cCritical" value="#ff334d"><input type="text" id="tCritical" value="CRITICAL"></div>
+      <div class="mini-in"><span>Fundi</span><input type="color" id="cDead" value="#b3122b"><input type="text" id="tDead" value="TOTALED"></div>
       <label class="chk"><input type="checkbox" id="rotate"> Rrotullo frazat (ndryshon çdo 3s)</label>
       <label class="chk"><input type="checkbox" id="blend" checked> Ngjyra kalojnë butësisht midis statuseve</label>
       <div class="note">Paketa “Dramatik” ka shumë fraza për çdo nivel — me rrotullim jep më shumë dramë.</div>
@@ -294,8 +297,8 @@
     <div class="body">
       <label class="chk"><input type="checkbox" id="heartbeat" checked> Rrahje zemre (shpejtohet kur bie %)</label>
       <div class="row"><label>Forca e rrahjes</label><input type="range" id="hbAmt" min="0" max="100" value="55"><span class="val" id="hbAmtOut">55</span></div>
-      <label class="chk"><input type="checkbox" id="vignetteOn" checked> Vignette e kuqe kur je në rrezik</label>
-      <div class="row"><label>Forca e vignette</label><input type="range" id="vigAmt" min="0" max="100" value="70"><span class="val" id="vigAmtOut">70</span></div>
+      <label class="chk"><input type="checkbox" id="auraOn" checked> Aureolë dramatike rreth HUD-it (në rrezik)</label>
+      <div class="row"><label>Forca e aureolës</label><input type="range" id="auraAmt" min="0" max="100" value="55"><span class="val" id="auraAmtOut">55</span></div>
       <label class="chk"><input type="checkbox" id="shakeOn" checked> Dridhje në përplasje</label>
       <label class="chk"><input type="checkbox" id="flashOn" checked> Flash i kuq kur bie një nivel statusi</label>
       <label class="chk"><input type="checkbox" id="pulseOn" checked> Puls i numrit kur ndryshon %</label>
@@ -322,9 +325,10 @@
         <button class="btn" id="btnStream">● STREAM MODE</button>
       </div>
       <div class="chips" style="margin-top:8px">
-        <button class="btn" id="btnGoTest">Testo GAME OVER</button>
+        <button class="btn" id="btnGoTest">Testo vulën (0%)</button>
         <button class="btn" id="btnBigHit">💥 -34%</button>
       </div>
+      <div class="mini-in" style="margin-top:8px"><span>Vula</span><input type="text" id="verdictText" value="TOTALED"></div>
       <div class="note">Kliko një herë në faqe (gest i përdoruesit) që browseri ta lejojë zërin. Zëri gjenerohet live — pa file audio.</div>
     </div>
   </div>
@@ -364,36 +368,37 @@
   var PACKS = {
     classic:{safe:["SAFE"],caution:["CAUTION"],danger:["DANGER"],critical:["CRITICAL"],dead:["NO CHANCE"]},
     dramatic:{
-      safe:["STEADY","HOLDING","ALL GOOD"],
-      caution:["TENSE","ON EDGE","SHAKY"],
-      danger:["IN PERIL","ONE MORE HIT","DON'T PUSH IT"],
-      critical:["LAST BREATH","BARELY ALIVE","CRITICAL"],
-      dead:["WRECKED","GAME OVER","IT'S OVER"]
+      safe:["STEADY","ALL GOOD","SMOOTH"],
+      caution:["CAREFUL","TENSE","GETTING RISKY"],
+      danger:["DANGER","ONE MORE HIT","BACK OFF"],
+      critical:["CRITICAL","ONE HIT AWAY","ALMOST WRECKED"],
+      dead:["TOTALED","WRECKED","GAME OVER"]
     },
     streamer:{
-      safe:["WE'RE GOOD","CHILL","EZ"],
-      caution:["UH OH","HMMM","SUS"],
-      danger:["OH NO","IT'S COOKING","NOT GREAT"],
-      critical:["GG","COOKED","ONE HP"],
-      dead:["SKILL ISSUE","R.I.P.","SEND IT"]
+      safe:["WE'RE GOOD","CHILL","CLEAN RUN"],
+      caution:["UH OH","GETTING SUS","CAREFUL NOW"],
+      danger:["OH NO","ONE MORE HIT","BACK OFF"],
+      critical:["ONE HP","COOKED","GG"],
+      dead:["WRECKED","SKILL ISSUE","SEND IT"]
     },
     hardcore:{
       safe:["OK"],caution:["HMM"],danger:["OUCH"],critical:["PRAY"],dead:["DOOMED"]
     }
   };
   var EMOJI = {safe:"😎",caution:"😬",danger:"😰",critical:"😵",dead:"💀"};
+  // v5.2.1: emoji zgjidhet nga NIVELI (jo nga fraza) — si ne mod
   var COLORS = {safe:"#42ff68",caution:"#ffd23f",danger:"#ff7a2f",critical:"#ff334d",dead:"#b3122b"};
 
   var DEFAULTS = {
     value:100, font:"bangers", size:54, weight:900, track:0, skew:0, italic:false, upper:true,
     fx:"none", pack:"dramatic", theta:80, thd:55, thc:20,
-    tSafe:"STEADY", tCaution:"TENSE", tDanger:"IN PERIL", tCritical:"LAST BREATH", tDead:"WRECKED",
+    tSafe:"STEADY", tCaution:"CAREFUL", tDanger:"DANGER", tCritical:"CRITICAL", tDead:"TOTALED",
     cSafe:"#42ff68", cCaution:"#ffd23f", cDanger:"#ff7a2f", cCritical:"#ff334d", cDead:"#b3122b",
     eSafe:"😎", eCaution:"😬", eDanger:"😰", eCritical:"😵", eDead:"💀",
-    emojiOn:true, rotate:true, blend:true, heartbeat:true, hbAmt:55, vignetteOn:true, vigAmt:70,
+    emojiOn:true, rotate:true, blend:true, heartbeat:true, hbAmt:55, auraOn:true, auraAmt:55,
     shakeOn:true, flashOn:true, pulseOn:true, statusPulse:true, meter:true, labelOn:true,
     statusSize:0.30, statusSpacing:0.14, statusWeight:900, bg:"none", posX:50, posY:26,
-    soundMode:"both", soundVol:35, soundBelow:60, gameOver:true, goText:"GAME OVER"
+    soundMode:"both", soundVol:35, soundBelow:60, verdict:true, verdictText:"TOTALED",
   };
   var S = Object.assign({}, DEFAULTS);
 
@@ -440,13 +445,14 @@
   /* ============ STATUSI / GAME OVER ============ */
   var ST_ORDER = {safe:0,caution:1,danger:2,critical:3,dead:4};
   var lastKey = null, goTimer = null;
-  function renderGameOver(key){
-    var el = $("gameover");
-    if (key === "dead" && lastKey !== "dead" && S.gameOver){
-      el.textContent = S.goText || "GAME OVER";
-      el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  function renderVerdict(key){
+    var el = $("svVerdict");
+    if (key === "dead" && lastKey !== "dead" && S.verdict){
+      el.textContent = S.verdictText || "TOTALED";
+      el.style.display = ""; el.style.animation = "none"; void el.offsetWidth;
+      el.style.animation = "verdictanim 3s cubic-bezier(.2,1.1,.3,1) forwards";
       if (goTimer) clearTimeout(goTimer);
-      goTimer = setTimeout(function(){ el.classList.remove("show"); }, 4600);
+      goTimer = setTimeout(function(){ el.style.display = "none"; }, 3100);
     }
     lastKey = key;
   }
@@ -501,11 +507,11 @@
     } else sv.classList.remove("heartbeat");
 
     // vignette
-    var vig = 0;
-    if (S.vignetteOn && v < S.theta){
-      vig = ((S.theta - v) / Math.max(1, S.theta)) * (S.vigAmt / 100);
+    var aura = 0;
+    if (S.auraOn && v < S.theta){
+      aura = ((S.theta - v) / Math.max(1, S.theta)) * (S.auraAmt / 100) * 0.55;
     }
-    $("vignette").style.opacity = vig.toFixed(3);
+    sv.style.setProperty("--aura", aura.toFixed(3));
 
     if (st !== lastState && lastState !== null){
       if (S.flashOn && (st === "critical" || st === "dead")){
@@ -513,7 +519,7 @@
       }
       if (ST_ORDER[st] > (ST_ORDER[lastState] || 0)) soundAlert(st);
     }
-    if (st !== lastKey) renderGameOver(st);
+    if (st !== lastKey) renderVerdict(st);
     lastState = st;
     puffJSON();
   }
@@ -560,7 +566,7 @@
   bind("thDanger","thd", function(v){ $("thDangerOut").textContent = v; });
   bind("thCritical","thc", function(v){ $("thCriticalOut").textContent = v; });
   bind("emojiOn","emojiOn"); bind("heartbeat","heartbeat"); bind("hbAmt","hbAmt", function(v){ $("hbAmtOut").textContent = v; });
-  bind("vignetteOn","vignetteOn"); bind("vigAmt","vigAmt", function(v){ $("vigAmtOut").textContent = v; });
+  bind("auraOn","auraOn"); bind("auraAmt","auraAmt", function(v){ $("auraAmtOut").textContent = v; });
   bind("shakeOn","shakeOn"); bind("flashOn","flashOn"); bind("pulseOn","pulseOn"); bind("statusPulse","statusPulse");
   bind("meter","meter"); bind("labelOn","labelOn"); bind("rotate","rotate", startRotate); bind("blend","blend");
 
@@ -702,6 +708,7 @@
   $("soundVol").addEventListener("input", function(){ S.soundVol = parseFloat(this.value); $("soundVolOut").textContent = Math.round(S.soundVol) + "%"; });
   $("soundBelow").addEventListener("input", function(){ S.soundBelow = parseFloat(this.value); $("soundBelowOut").textContent = Math.round(S.soundBelow) + "%"; });
   $("btnSoundTest").addEventListener("click", testSound);
+  $("verdictText").addEventListener("input", function(){ S.verdictText = this.value; });
   $("btnGoTest").addEventListener("click", function(){
     display = 0; target = 0; $("simSpeed").value = 0; $("valOut").textContent = 0;
     lastKey = null; render();
@@ -726,22 +733,22 @@
   /* ============ presetet ============ */
   var PRESETS = {
     pro:      {font:"bangers",size:54,weight:900,track:0.0,skew:0,italic:false,upper:true,fx:"none",pack:"classic",
-               heartbeat:false,vignetteOn:false,shakeOn:false,flashOn:false,blend:true,meter:false,emojiOn:true,
+               heartbeat:false,auraOn:false,shakeOn:false,flashOn:false,blend:true,meter:false,emojiOn:true,
                cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b"},
     dramatic:{font:"bangers",size:62,weight:900,track:0.02,skew:0,italic:false,upper:true,fx:"chrome",pack:"dramatic",
-               heartbeat:true,hbAmt:60,vignetteOn:true,vigAmt:75,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:false,
+               heartbeat:true,hbAmt:60,auraOn:true,auraAmt:70,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:false,
                cSafe:"#e8f4ff",cCaution:"#ffd23f",cDanger:"#ff8a2f",cCritical:"#ff2233",cDead:"#8c0f18",rotate:true},
     streamer: {font:"bangers",size:58,weight:900,track:0.01,skew:0,italic:false,upper:true,fx:"glitch",pack:"streamer",
-               heartbeat:true,hbAmt:45,vignetteOn:true,vigAmt:55,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
+               heartbeat:true,hbAmt:45,auraOn:true,auraAmt:60,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
                cSafe:"#7dff9b",cCaution:"#ffe14d",cDanger:"#ff8a1e",cCritical:"#ff2d55",cDead:"#7a0b1c",rotate:true},
     hardcore: {font:"bangers",size:66,weight:950,track:0.06,skew:0,italic:false,upper:true,fx:"glitch",pack:"hardcore",
-               heartbeat:true,hbAmt:80,vignetteOn:true,vigAmt:90,shakeOn:true,flashOn:true,blend:false,meter:false,emojiOn:false,
+               heartbeat:true,hbAmt:80,auraOn:true,auraAmt:85,shakeOn:true,flashOn:true,blend:false,meter:false,emojiOn:false,
                cSafe:"#e9eef3",cCaution:"#ffb347",cDanger:"#ff4423",cCritical:"#e00028",cDead:"#5c0007",rotate:false},
     blood:    {font:"bangers",size:60,weight:900,track:0.01,skew:0,italic:false,upper:true,fx:"blood",pack:"dramatic",
-               heartbeat:true,hbAmt:55,vignetteOn:true,vigAmt:65,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
+               heartbeat:true,hbAmt:55,auraOn:true,auraAmt:65,shakeOn:true,flashOn:true,blend:true,meter:true,emojiOn:true,
                cSafe:"#42ff68",cCaution:"#ffd23f",cDanger:"#ff7a2f",cCritical:"#ff334d",cDead:"#b3122b",rotate:false},
     arcade:   {font:"impact",size:64,weight:900,track:0.03,skew:0,italic:false,upper:true,fx:"extrude",pack:"streamer",
-               heartbeat:false,vignetteOn:false,shakeOn:true,flashOn:true,blend:false,meter:true,emojiOn:true,
+               heartbeat:false,auraOn:false,shakeOn:true,flashOn:true,blend:false,meter:true,emojiOn:true,
                cSafe:"#39ff14",cCaution:"#ffe600",cDanger:"#ff9100",cCritical:"#ff1744",cDead:"#7b00ff",rotate:true}
   };
 
@@ -753,7 +760,7 @@
     $("track").value = S.track; $("skew").value = S.skew; $("italic").checked = !!S.italic; $("upper").checked = !!S.upper;
     $("sizeOut").textContent = S.size + "px"; $("weightOut").textContent = S.weight;
     $("trackOut").textContent = (+S.track).toFixed(2); $("skewOut").textContent = S.skew + "°";
-    $("heartbeat").checked = !!S.heartbeat; $("vignetteOn").checked = !!S.vignetteOn; $("vigAmt").value = S.vigAmt;
+    $("heartbeat").checked = !!S.heartbeat; $("auraOn").checked = !!S.auraOn; $("auraAmt").value = S.auraAmt;
     $("shakeOn").checked = !!S.shakeOn; $("flashOn").checked = !!S.flashOn;
     $("meter").checked = !!S.meter; $("emojiOn").checked = !!S.emojiOn; $("blend").checked = !!S.blend;
     $("rotate").checked = !!S.rotate; $("hbAmt").value = S.hbAmt;

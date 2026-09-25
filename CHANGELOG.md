@@ -1,5 +1,22 @@
 # Changelog — HUD PRO (CreatorPack)
 
+## v5.2.1 — “Bangers kudo + pa ekran të kuq”
+**Rregullime**
+- **Fonti Bangers nuk aplikohej** në v5.2: blloqet `@font-face` ekzistonin, por `.pf-survival` kërkonte ende `'Futura Extra Bold'`. Tani baza është `'Bangers HUD'` → titulli, `%` dhe statusi kanë të njëjtin font (ngjyrat mbeten të ndara).
+- Bangers vjen edhe si **skedar** (`Bangers.woff2`, `Bangers-LatinExt.woff2` brenda mod-it) edhe si **base64** → punon edhe nëse njëra rrugë bllokohet, edhe offline.
+- U hoq **bold/italic-i i rremë** për Bangers (fonti ka vetëm peshën 400) — teksti nuk duket ma i turbullt.
+- **Emoji bug**: shfaqej gjithmonë 💀 (edhe në 100%) sepse krahasohej fjala e paketës me `'SAFE'`. Tani emoji zgjidhet nga **niveli** dhe është i editueshëm (5 fusha).
+- **Ekrani i kuq u hoq**: vignette-a që skuqte krejt ekranin u zëvendësua me një **aureolë lokale** rreth HUD-it (ngjyra e rrezikut).
+- **GAME OVER** gjigant mbi lojën u hoq → **vulë kompakte “TOTALED”** brenda HUD-it (tekst + kohëzgjatje + ON/OFF).
+
+**Tekste ma të qarta (20% → 0%)**
+- Dramatic: `CRITICAL` · `ONE HIT AWAY` · `ALMOST WRECKED` → `TOTALED` · `WRECKED` · `GAME OVER`
+- Streamer: `ONE HP` · `COOKED` · `GG` → `WRECKED` · `SKILL ISSUE` · `SEND IT`
+- Kujdes/Rrezik: `CAREFUL` · `TENSE` · `GETTING RISKY` / `DANGER` · `ONE MORE HIT` · `BACK OFF`
+
+**Migrim**
+- `survivalFontFamily: 'futura'` → `'bangers'`, pesha → 400, italic → off, emoji-t e reja shtohen, `survivalGameOver` → `survivalVerdictOn`, vignette hiqet nga UI. Asgjë tjetër nuk resetohet.
+
 ## v5.2.0 — “Bangers + Drama”
 **Fonti**
 - Fonti i HUD-it: **Bangers** (SIL OFL 1.1), i ngulitur si base64 WOFF2 — punon offline, pa instalim.

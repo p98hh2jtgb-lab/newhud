@@ -122,6 +122,11 @@ angular.module('beamng.apps')
           survivalStatusPosition: 'bottom',
           survivalStatusPulse: true,
           survivalEmojiOn: true,
+          survivalEmojiSafe: '😎',       // v5.2.1: emoji te editueshme per cdo nivel
+          survivalEmojiCaution: '😬',
+          survivalEmojiDanger: '😰',
+          survivalEmojiCritical: '😵',
+          survivalEmojiDead: '💀',
           survivalEmojiMode: 'right',    // SAFE + emoji inline
           survivalEmojiSize: 0.34,
           survivalEmojiPop: true,
@@ -129,9 +134,9 @@ angular.module('beamng.apps')
           survivalShowMeter: false,
           survivalShowPercent: true,
           survivalLabelScale: 0.60,
-          survivalFontFamily: 'futura',   // v5.1: 'futura' = Futura Extra Bold (embedded), 'narrow' = Arial Narrow i vjeter
-          survivalFontWeight: '900',
-          survivalItalic: true,
+          survivalFontFamily: 'bangers',  // v5.2.1: Bangers (i ngulitur) | narrow | impact | arialblack
+          survivalFontWeight: '400',      // Bangers ka vetem 400 — pa false-bold
+          survivalItalic: false,
           survivalOutline: 1,
           survivalGlow: 10,
           survivalDecimals: 0,
@@ -168,12 +173,13 @@ angular.module('beamng.apps')
           survivalTextFx: 'none',           // none | neon | chrome | gold | blood | extrude | glitch | flicker
           survivalHeartbeat: true,          // HUD-i pulson si zemra, shpejtohet kur bie %
           survivalHeartbeatAmount: 55,
-          survivalVignette: true,           // skajet e ekranit skuqen
-          survivalVignetteAmount: 70,
+          survivalGlowPulse: true,          // v5.2.1: aureola dramatike rreth HUD-it (jo ekran i kuq)
+          survivalGlowAmount: 55,
           survivalRedFlash: true,           // flash i kuq kur kalon ne rrezik/kritik
           survivalImpactPopup: true,        // teksti i madh "💥 -18%" ne pende
-          survivalGameOver: true,           // ekran GAME OVER kur arrin 0%
-          survivalGameOverText: 'GAME OVER',
+          survivalVerdictOn: true,          // v5.2.1: vula "TOTALED" brenda HUD-it kur arrin 0%
+          survivalVerdictText: 'TOTALED',
+          survivalVerdictMs: 3000,
           survivalCriticalGlitch: true,     // glitch kur je ne kritik
           survivalSoundMode: 'both',        // off | heartbeat | alerts | both
           survivalSoundVolume: 0.35,
@@ -403,6 +409,7 @@ angular.module('beamng.apps')
         if (!cfg.survivalStatusPack) cfg.survivalStatusPack = 'dramatic';
         var DEF_TEXTS = { safe: 'STEADY', caution: 'TENSE', danger: 'IN PERIL', critical: 'LAST BREATH', dead: 'WRECKED' };
         var savedStatusVersion = saved ? Number(saved.survivalStatusProfileVersion || 0) : 0;
+        var savedFontVersion = saved ? Number(saved.survivalFontProfileVersion || 0) : 0;
         if (!cfg.survivalStatusTexts || typeof cfg.survivalStatusTexts !== 'object') cfg.survivalStatusTexts = angular.extend({}, DEF_TEXTS);
         ['safe','caution','danger','critical','dead'].forEach(function(k) {
           if (!cfg.survivalStatusTexts[k]) cfg.survivalStatusTexts[k] = DEF_TEXTS[k];
@@ -422,12 +429,13 @@ angular.module('beamng.apps')
         if (!cfg.survivalTextFx) cfg.survivalTextFx = 'none';
         if (cfg.survivalHeartbeat == null) cfg.survivalHeartbeat = true;
         if (cfg.survivalHeartbeatAmount == null) cfg.survivalHeartbeatAmount = 55;
-        if (cfg.survivalVignette == null) cfg.survivalVignette = true;
-        if (cfg.survivalVignetteAmount == null) cfg.survivalVignetteAmount = 70;
+        if (cfg.survivalGlowPulse == null) cfg.survivalGlowPulse = true;
+        if (cfg.survivalGlowAmount == null) cfg.survivalGlowAmount = 55;
         if (cfg.survivalRedFlash == null) cfg.survivalRedFlash = true;
         if (cfg.survivalImpactPopup == null) cfg.survivalImpactPopup = true;
-        if (cfg.survivalGameOver == null) cfg.survivalGameOver = true;
-        if (!cfg.survivalGameOverText) cfg.survivalGameOverText = 'GAME OVER';
+        if (cfg.survivalVerdictOn == null) cfg.survivalVerdictOn = (saved && saved.survivalGameOver === false) ? false : true;
+        if (!cfg.survivalVerdictText || cfg.survivalVerdictText === 'GAME OVER') cfg.survivalVerdictText = 'TOTALED';
+        if (cfg.survivalVerdictMs == null) cfg.survivalVerdictMs = 3000;
         if (cfg.survivalCriticalGlitch == null) cfg.survivalCriticalGlitch = true;
         if (!cfg.survivalSoundMode) cfg.survivalSoundMode = 'both';
         if (cfg.survivalSoundVolume == null) cfg.survivalSoundVolume = 0.35;
@@ -440,6 +448,20 @@ angular.module('beamng.apps')
           cfg.survivalLowPulse = true;
           cfg.survivalShowStatus = true;
         }
+
+        // ---- v5.2.1: Bangers per te gjitha pjeset, pa bold/italic te rreme ----
+        if (cfg.survivalFontFamily === 'futura') cfg.survivalFontFamily = 'bangers';
+        if (savedFontVersion < 1) {
+          cfg.survivalFontFamily = 'bangers';
+          cfg.survivalFontWeight = '400';
+          cfg.survivalItalic = false;
+          cfg.survivalFontProfileVersion = 1;
+        }
+        if (!cfg.survivalEmojiSafe) cfg.survivalEmojiSafe = '😎';
+        if (!cfg.survivalEmojiCaution) cfg.survivalEmojiCaution = '😬';
+        if (!cfg.survivalEmojiDanger) cfg.survivalEmojiDanger = '😰';
+        if (!cfg.survivalEmojiCritical) cfg.survivalEmojiCritical = '😵';
+        if (!cfg.survivalEmojiDead) cfg.survivalEmojiDead = '💀';
 
         // ---- v2.1 guides ----
         if (cfg.guidesOn === undefined || cfg.guidesOn === null) cfg.guidesOn = false;
@@ -886,7 +908,7 @@ angular.module('beamng.apps')
         visible:true, deltaVisible:false, deltaText:'',
         // ---- v5.2 ----
         rotIndex:0, stateKey:'safe', flash:false, flashBig:false,
-        impactText:'', impactShow:false, gameOverShow:false
+        impactText:'', impactShow:false, verdictShow:false, auraOpacity:0
       };
       var survivalPulseTimer = null;
       var survivalDeltaTimer = null;
@@ -900,8 +922,7 @@ angular.module('beamng.apps')
       var survivalRotateTimer = null;
       var survivalImpactTimer = null;
       var survivalFlashTimer = null;
-      var survivalGameOverTimer = null;
-      var survivalVignetteTimer = null;
+      var survivalVerdictTimer = null;
       var unwatchSurvivalState = null;
 
       // Lightweight 30 FPS number tween. New telemetry continues from the current
@@ -1303,18 +1324,18 @@ angular.module('beamng.apps')
           critical: ['CRITICAL'], dead: ['NO CHANCE']
         },
         dramatic: {
-          safe: ['STEADY', 'HOLDING', 'ALL GOOD'],
-          caution: ['TENSE', 'ON EDGE', 'SHAKY'],
-          danger: ['IN PERIL', 'ONE MORE HIT', "DON'T PUSH IT"],
-          critical: ['LAST BREATH', 'BARELY ALIVE', 'CRITICAL'],
-          dead: ['WRECKED', 'GAME OVER', "IT'S OVER"]
+          safe: ['STEADY', 'ALL GOOD', 'SMOOTH'],
+          caution: ['CAREFUL', 'TENSE', 'GETTING RISKY'],
+          danger: ['DANGER', 'ONE MORE HIT', 'BACK OFF'],
+          critical: ['CRITICAL', 'ONE HIT AWAY', 'ALMOST WRECKED'],
+          dead: ['TOTALED', 'WRECKED', 'GAME OVER']
         },
         streamer: {
-          safe: ["WE'RE GOOD", 'CHILL', 'EZ'],
-          caution: ['UH OH', 'HMMM', 'SUS'],
-          danger: ['OH NO', "IT'S COOKING", 'NOT GREAT'],
-          critical: ['GG', 'COOKED', 'ONE HP'],
-          dead: ['SKILL ISSUE', 'R.I.P.', 'SEND IT']
+          safe: ["WE'RE GOOD", 'CHILL', 'CLEAN RUN'],
+          caution: ['UH OH', 'GETTING SUS', 'CAREFUL NOW'],
+          danger: ['OH NO', 'ONE MORE HIT', 'BACK OFF'],
+          critical: ['ONE HP', 'COOKED', 'GG'],
+          dead: ['WRECKED', 'SKILL ISSUE', 'SEND IT']
         },
         hardcore: {
           safe: ['OK'], caution: ['HMM'], danger: ['OUCH'],
@@ -1376,13 +1397,18 @@ angular.module('beamng.apps')
       }
       scope.restartSurvivalRotation = restartSurvivalRotation;
 
+      // v5.2.1 FIX: emoji zgjidhet nga NIVELI (jo nga fjala e paketes).
+      // Me pare kthehej gjithmone 💀 sepse frazat nuk ishin 'SAFE'/'DANGER'.
       scope.survivalEmojiText = function() {
-        var status = scope.survivalStatus();
-        if (status === 'SAFE') return '😎';
-        if (status === 'CAUTION') return '😬';
-        if (status === 'DANGER') return '😰';
-        if (status === 'CRITICAL') return '😵';
-        return '💀';
+        var key = scope.survivalStateKey();
+        var map = {
+          safe: scope.cfg.survivalEmojiSafe || '😎',
+          caution: scope.cfg.survivalEmojiCaution || '😬',
+          danger: scope.cfg.survivalEmojiDanger || '😰',
+          critical: scope.cfg.survivalEmojiCritical || '😵',
+          dead: scope.cfg.survivalEmojiDead || '💀'
+        };
+        return map[key] || map.safe;
       };
 
       scope.survivalEmojiStyle = function() {
@@ -1418,7 +1444,7 @@ angular.module('beamng.apps')
         }
         if (worse) survivalSoundAlert(now, before);
 
-        if (now === 'dead' && scope.cfg.survivalGameOver) triggerGameOver();
+        if (now === 'dead' && scope.cfg.survivalVerdictOn !== false) triggerVerdict();
 
         if (scope.cfg.survivalEmojiPop !== false && !scope.survival.emojiPulse) {
           if (survivalEmojiTimer) { try { $timeout.cancel(survivalEmojiTimer); } catch (e) {} }
@@ -1469,7 +1495,9 @@ angular.module('beamng.apps')
 
       scope.survivalClass = function() {
         var cls = {};
-        cls['font-narrow'] = scope.cfg.survivalFontFamily === 'narrow';   // v5.1: Futura Extra Bold -> Arial Narrow
+        var fam = scope.cfg.survivalFontFamily || 'bangers';
+        cls['font-bangers'] = (fam === 'bangers' || fam === 'futura');    // v5.2.1: Bangers (edhe per config-et e vjetra)
+        cls['font-narrow'] = fam === 'narrow';
         cls['layout-' + (scope.cfg.survivalLayout || 'inline')] = true;
         cls['bg-' + (scope.cfg.survivalBackground || 'none')] = true;
         cls['delta-' + (scope.cfg.survivalDeltaPosition || 'right')] = true;
@@ -1482,8 +1510,8 @@ angular.module('beamng.apps')
         cls['edit-position'] = scope.cfg.survivalEditPosition;
         // ---- v5.2: FX teksti, rrahje zemre, glitch ----
         cls['fx-' + (scope.cfg.survivalTextFx || 'none')] = true;
-        cls['font-impact'] = scope.cfg.survivalFontFamily === 'impact';
-        cls['font-arialblack'] = scope.cfg.survivalFontFamily === 'arialblack';
+        cls['font-impact'] = fam === 'impact';
+        cls['font-arialblack'] = fam === 'arialblack';
         var key = scope.survivalStateKey();
         cls['heartbeat'] = scope.cfg.survivalHeartbeat === true && scope.survivalRawValue() < Number(scope.cfg.survivalSoundBelow || 60) + 15;
         cls['glitchy'] = scope.cfg.survivalCriticalGlitch !== false && (key === 'critical' || key === 'dead');
@@ -1584,19 +1612,19 @@ angular.module('beamng.apps')
           } catch (e) {}
         }
 
-        // vignette e kuqe
-        var vig = 0;
-        if (scope.cfg.survivalVignette && v < t.caution) {
-          vig = ((t.caution - v) / Math.max(1, t.caution)) *
-                (Math.max(0, Math.min(100, Number(scope.cfg.survivalVignetteAmount) || 0)) / 100);
+        // v5.2.1: aureola dramatike — ngjyra e rrezikut pulson RRETH HUD-it,
+        // ekrani i lojes nuk skuqet ma.
+        var aura = 0;
+        if (scope.cfg.survivalGlowPulse !== false && v < t.caution) {
+          aura = ((t.caution - v) / Math.max(1, t.caution)) *
+                 (Math.max(0, Math.min(100, Number(scope.cfg.survivalGlowAmount) || 0)) / 100) * 0.55;
         }
-        scope.survival.vigOpacity = Math.max(0, Math.min(0.92, vig));
+        scope.survival.auraOpacity = aura;
+        if (node && node.style && node.style.setProperty) {
+          try { node.style.setProperty('--aura', aura.toFixed(3)); } catch (e) {}
+        }
       }
       scope.refreshSurvivalDrama = refreshSurvivalDrama;
-
-      scope.survivalVignetteStyle = function() {
-        return { opacity: Number(scope.survival.vigOpacity) || 0 };
-      };
 
       function triggerSurvivalFlash(big) {
         if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch (e) {} }
@@ -1620,12 +1648,20 @@ angular.module('beamng.apps')
       }
       scope.triggerImpactPopup = triggerImpactPopup;
 
-      function triggerGameOver() {
-        if (survivalGameOverTimer) { try { $timeout.cancel(survivalGameOverTimer); } catch (e) {} }
-        scope.survival.gameOverShow = true;
-        survivalGameOverTimer = $timeout(function() { scope.survival.gameOverShow = false; }, 4500);
+      // v5.2.1: vula kompakte "TOTALED" brenda HUD-it (nuk mbulon lojen)
+      function triggerVerdict() {
+        if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch (e) {} }
+        var ms = Math.max(1200, Math.min(8000, Number(scope.cfg.survivalVerdictMs) || 3000));
+        if (scope.survival.verdictShow) {
+          // ishte hapur -> fike/ndize qe animacioni te rifilloje
+          scope.survival.verdictShow = false;
+          $timeout(function() { scope.survival.verdictShow = true; }, 8);
+        } else {
+          scope.survival.verdictShow = true;
+        }
+        survivalVerdictTimer = $timeout(function() { scope.survival.verdictShow = false; }, ms + 12);
       }
-      scope.triggerGameOver = triggerGameOver;
+      scope.triggerVerdict = triggerVerdict;
 
       // =====================================================
       // v5.2 — ZË (Web Audio; pa file ekstra, pa instalim)
@@ -1816,13 +1852,12 @@ angular.module('beamng.apps')
         scope.persist();
       };
 
-      scope.testGameOver = function() {
-        var it = activeCostItem(); if (!it) return;
-        var old = Number(it.survivalChance); if (!isFinite(old)) old = 100;
-        it.survivalChance = 0;
-        animateSurvivalDisplay(0);
-        showSurvivalDelta(old, old);
-        scope.persist();
+      // Testojeni vulen "TOTALED" pa e shkaterruar makinen.
+      scope.testGameOver = function() { scope.testVerdict(); };
+
+      scope.testVerdict = function() {
+        scope.cfg.survivalVerdictOn = true;
+        triggerVerdict();
       };
 
       scope.startSurvivalDrag = function(evt) {
@@ -2800,8 +2835,7 @@ angular.module('beamng.apps')
         if (survivalRotateTimer) { try { $timeout.cancel(survivalRotateTimer); } catch(e) {} }
         if (survivalImpactTimer) { try { $timeout.cancel(survivalImpactTimer); } catch(e) {} }
         if (survivalFlashTimer) { try { $timeout.cancel(survivalFlashTimer); } catch(e) {} }
-        if (survivalGameOverTimer) { try { $timeout.cancel(survivalGameOverTimer); } catch(e) {} }
-        if (survivalVignetteTimer) { try { $timeout.cancel(survivalVignetteTimer); } catch(e) {} }
+        if (survivalVerdictTimer) { try { $timeout.cancel(survivalVerdictTimer); } catch(e) {} }
         if (sound.hbTimer) { try { clearTimeout(sound.hbTimer); } catch(e) {} sound.hbTimer = null; }
         try { if (sound.ctx && sound.ctx.close) sound.ctx.close(); } catch(e) {}
         try {

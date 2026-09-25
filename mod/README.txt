@@ -1,5 +1,35 @@
-HUD PRO v5.2 — BANGERS FONT + DRAMA PACK + SOUND + STREAM MODE
-================================================================
+HUD PRO v5.2.1 — BANGERS EVERYWHERE + CLEARER STATUS + NO RED SCREEN
+=====================================================================
+
+FIXES IN v5.2.1 (lexoji këto të parat)
+--------------------------------------
+1) FONTI: Bangers tani aplikohet me të vërtetë. Në v5.2 blloqet @font-face u
+   shtuan, por widget-i vazhdonte të kërkonte 'Futura Extra Bold' — prandaj
+   shihje një font tjetër. Tani:
+     - fonti bazë i HUD-it është 'Bangers HUD' (i ngulitur);
+     - titulli "SURVIVAL CHANCE", përqindja dhe statusi (SAFE e këto) kanë
+       TË NJËJTIN font — por NGYJRAT mbeten të ndara si ma parë;
+     - Bangers ka vetëm një peshë (400): u hoq bold/italic-i i rremë që e
+       bënte të turbullt;
+     - fonti vjen edhe si skedar (Bangers.woff2 / Bangers-LatinExt.woff2)
+       edhe si base64 — punon gjithsesi, edhe offline.
+2) EKRANI I KUQ: vignette-a që skuqte krejt ekranin u hoq KREJT. Në vend të
+   saj ka një AUREOLË dramatike vetëm rreth HUD-it, me ngjyrën e rrezikut —
+   loja mbetet e pastër. DRAMA -> "Aureolë dramatike rreth HUD-it".
+3) GAME OVER: overlay-i gjigant mbi lojën u hoq. Tani del një VULË kompakte
+   "TOTALED" brenda HUD-it (teksti, kohëzgjatja dhe ON/OFF të editueshme).
+   Ma e qartë për audiencën dhe nuk t'zë ekranin.
+4) EMOJI: bug-u që shfaqte 💀 edhe në 100% u rregullua (emoji zgjidhet nga
+   niveli, jo nga fjala e paketës). Emoji-t tani janë TË EDITUESHME: 5 fusha
+   te SURVIVAL -> Emoji Mood.
+5) FRAZAT 20% -> 0% u bënë ma të qarta për audiencën:
+     Dramatic : CRITICAL · ONE HIT AWAY · ALMOST WRECKED  ->  TOTALED / WRECKED
+     Streamer : ONE HP · COOKED · GG                      ->  WRECKED / SKILL ISSUE
+     Kujdesi  : CAREFUL · TENSE · GETTING RISKY
+     Rreziku  : DANGER · ONE MORE HIT · BACK OFF
+
+ORIGJINALI I v5.2
+-----------------
 
 WHAT'S NEW IN v5.2
 ------------------

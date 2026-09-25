@@ -1,6 +1,6 @@
 {
   "name": "CreatorPack",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "author": "daimy",
-  "description": "HUD PRO v5.2 - Bangers font (embedded), dramatic status packs (STEADY / TENSE / IN PERIL / LAST BREATH / WRECKED), 5 editable risk colors, text FX (neon/chrome/gold/blood/3D/glitch/flicker), heartbeat pulse, red vignette, flash, impact popup, GAME OVER, heartbeat/alert sound and a one-key STREAM MODE."
+  "description": "HUD PRO v5.2.1 - Bangers font applied everywhere (title, %, status - one font, separate colors), clearer status phrases (CRITICAL / ONE HIT AWAY / TOTALED), red screen removed (local aura instead), compact TOTALED badge instead of full-screen GAME OVER, fixed skull emoji bug, editable emojis."
 }
