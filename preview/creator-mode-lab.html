@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HUD PRO — Creator Mode Lab (v5.4 ide)</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  :root{
+    --safe:#42ff68; --caution:#ffd23f; --danger:#ff7a2f; --critical:#ff334d; --dead:#b3122b;
+    --panel:#0b0e14; --line:rgba(255,255,255,.09); --txt:#e8edf5; --dim:#8b97ab; --acc:#ff8a1e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#05070b;color:var(--txt);font-family:'Segoe UI',system-ui,Arial,sans-serif;overflow:hidden}
+  body{display:flex}
+
+  /* ================= STAGE ================= */
+  #stageWrap{position:relative;flex:1;min-width:0;display:flex;flex-direction:column}
+  #stage{position:relative;flex:1;overflow:hidden}
+  .game{position:absolute;inset:0;
+    background:radial-gradient(120% 80% at 50% 118%, #2b303b 0%, #13161d 55%, #0a0c11 100%),
+               linear-gradient(#101318,#0a0c11)}
+  .game:before{content:"";position:absolute;inset:0;opacity:.55;
+    background:linear-gradient(transparent 0 60%, #1b1f27 60% 100%),
+               repeating-linear-gradient(90deg, transparent 0 48px, rgba(255,255,255,.04) 48px 54px)}
+  .game:after{content:"";position:absolute;left:0;right:0;top:60%;height:3px;background:rgba(255,255,255,.10)}
+  .lane{position:absolute;left:50%;top:60%;bottom:0;width:4px;background:rgba(255,255,255,.16);transform:translateX(-50%)}
+  .car{position:absolute;left:50%;top:64%;width:210px;height:96px;transform:translate(-50%,-50%);
+    background:radial-gradient(60% 60% at 50% 45%, rgba(255,255,255,.13), transparent 70%);border-radius:40%}
+  .tag{position:absolute;left:14px;top:12px;font-size:11px;letter-spacing:.16em;color:#5d6a80;text-transform:uppercase}
+
+  /* ================= HUD (stili i mod-it) ================= */
+  .pf-survival{position:absolute;left:50%;top:16%;transform:translate(-50%,-50%);z-index:7;display:flex;flex-direction:column;
+    align-items:center;gap:.12em;white-space:nowrap;pointer-events:none;user-select:none;
+    font-family:'Bangers HUD','Bangers',Impact,sans-serif;font-style:normal;line-height:1;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.72));color:#42ff68}
+  .pf-survival-main{position:relative;display:flex;align-items:baseline;justify-content:center;gap:.30em}
+  .pf-survival-label{font-size:1em;font-weight:400;letter-spacing:.05em;color:#fff;
+    -webkit-text-stroke:1px rgba(0,0,0,.72);text-shadow:0 2px 2px rgba(0,0,0,.86)}
+  .pf-survival-value{font-size:1em;font-weight:400;letter-spacing:.01em;-webkit-text-stroke:1px rgba(0,0,0,.6)}
+  .pf-survival-value i{font-size:.62em;font-style:normal;vertical-align:.12em}
+  .pf-survival-delta{display:inline-block;margin-left:.30em;font-size:.30em;font-weight:400;letter-spacing:.04em;
+    color:#ff8a32;text-shadow:0 2px 4px rgba(0,0,0,.9)}
+  .pf-survival-status-wrap{display:flex;align-items:center;justify-content:center;gap:.09em;margin-top:.10em}
+  .pf-survival-status{font-size:.30em;letter-spacing:.14em;text-shadow:0 2px 4px rgba(0,0,0,.88),0 0 8px currentColor}
+  .pf-survival-emoji{font-family:'Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:.34em;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.48))}
+  .pf-survival-verdict{margin-top:.14em;padding:.10em .34em .14em;font-size:.34em;letter-spacing:.10em;text-transform:uppercase;
+    color:#fff;background:linear-gradient(180deg,rgba(190,10,30,.92),rgba(120,0,16,.92));border:1px solid rgba(255,120,120,.55);
+    border-radius:.22em;box-shadow:0 3px 12px rgba(0,0,0,.55),0 0 14px rgba(255,30,50,.45)}
+
+  /* ================= ELEMENTET E REJA (v5.4) ================= */
+  .cm{position:absolute;z-index:8;font-family:'Bangers HUD','Bangers',Impact,sans-serif;letter-spacing:.02em;
+    pointer-events:none;user-select:none;display:none}
+  .cm.on{display:block}
+  .cm .lbl{font-family:'Segoe UI',system-ui,sans-serif;font-size:10px;letter-spacing:.18em;color:#93a4bd;text-transform:uppercase}
+
+  /* 1. MISSION CARD */
+  #el-mission{left:50%;top:5.4%;transform:translateX(-50%);width:min(560px,62%);text-align:center}
+  #el-mission .mm-card{background:linear-gradient(180deg,rgba(9,12,18,.88),rgba(9,12,18,.72));
+    border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:10px 16px 12px;
+    box-shadow:0 10px 28px rgba(0,0,0,.5);backdrop-filter:blur(6px)}
+  #el-mission .mm-goal{font-size:19px;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.8)}
+  #el-mission .mm-goal b{color:var(--acc)}
+  #el-mission .mm-bar{position:relative;height:9px;border-radius:999px;background:rgba(255,255,255,.13);margin-top:9px;overflow:hidden}
+  #el-mission .mm-fill{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,#42ff68,#ffd23f 65%,#ff7a2f);
+    transition:width .35s cubic-bezier(.22,1,.36,1)}
+  #el-mission .mm-row{display:flex;justify-content:space-between;margin-top:6px;font-family:'Segoe UI',sans-serif;
+    font-size:11.5px;color:#c3d1e4}
+  #el-mission .mm-row b{color:#fff}
+
+  /* 2. LEVEL */
+  #el-level{left:34px;top:19%;transform:translateY(-50%)}
+  #el-level .lv{display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:linear-gradient(180deg,rgba(255,138,30,.95),rgba(214,96,10,.95));color:#1a0d00;
+    border-radius:12px;padding:8px 14px 9px;box-shadow:0 6px 18px rgba(255,120,20,.35)}
+  #el-level .lv b{font-size:26px;line-height:1}
+  #el-level .lv span{font-size:11px;letter-spacing:.16em;font-family:'Segoe UI',sans-serif;font-weight:700}
+
+  /* 3. COMBO */
+  #el-combo{right:34px;top:19%;transform:translateY(-50%) scale(1)}
+  #el-combo .cb{background:linear-gradient(180deg,rgba(24,10,10,.92),rgba(40,8,8,.92));border:1px solid rgba(255,90,90,.55);
+    border-radius:12px;padding:8px 14px;color:#fff;font-size:22px;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+  #el-combo .cb b{color:#ff5b5b}
+  #el-combo .cb.pop{animation:cbPop 480ms cubic-bezier(.2,1.4,.3,1)}
+  @keyframes cbPop{0%{transform:scale(.5)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+
+  /* 4. STREAK */
+  #el-streak{left:34px;bottom:12%;transform:none}
+  #el-streak .st{background:rgba(6,20,12,.86);border:1px solid rgba(104,255,164,.45);border-radius:10px;
+    padding:7px 13px;color:#b7ffd2;font-family:'Segoe UI',sans-serif;font-size:13px;font-weight:700;letter-spacing:.04em;
+    box-shadow:0 6px 16px rgba(0,0,0,.45)}
+  #el-streak .st b{color:#68ffa4}
+
+  /* 5. DANGER METER */
+  #el-danger{left:34px;bottom:24%;width:236px}
+  #el-danger .dg{background:rgba(9,12,18,.85);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 12px 10px}
+  #el-danger .dg-top{display:flex;justify-content:space-between;align-items:center}
+  #el-danger .dg-lab{font-size:15px;letter-spacing:.16em;color:#ffb066}
+  #el-danger .dg-val{font-family:'Segoe UI',sans-serif;font-size:11.5px;color:#c3d1e4}
+  #el-danger .dg-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.13);margin-top:7px;overflow:hidden}
+  #el-danger .dg-fill{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,#ffd23f,#ff7a2f 55%,#ff334d);
+    transition:width .3s ease}
+  #el-danger .dg-count{margin-top:7px;font-size:26px;color:#ff5b5b;text-shadow:0 0 14px rgba(255,40,40,.6);text-align:center;display:none}
+  #el-danger.critical .dg-count{display:block}
+  #el-danger.critical .dg{border-color:rgba(255,80,80,.6);box-shadow:0 0 24px rgba(255,30,30,.28)}
+
+  /* 6. ODDS BAR */
+  #el-odds{right:34px;bottom:12%;width:250px;text-align:right}
+  #el-odds .od{background:rgba(9,12,18,.85);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 12px 10px}
+  #el-odds .od-row{display:flex;justify-content:space-between;align-items:baseline}
+  #el-odds .od-lab{font-size:15px;letter-spacing:.16em;color:#9fd0ff}
+  #el-odds .od-val{font-size:24px;color:#fff}
+  #el-odds .od-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.13);margin-top:7px;overflow:hidden}
+  #el-odds .od-fill{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,#ff334d,#ffd23f 45%,#42ff68);transition:width .3s}
+  #el-odds .od-note{font-family:'Segoe UI',sans-serif;font-size:10.5px;color:#8b97ab;margin-top:6px}
+
+  /* 7. RECORD */
+  #el-record{left:50%;top:30%;transform:translate(-50%,-50%) scale(.9);opacity:0}
+  #el-record.on{animation:recIn 2.6s ease-out forwards}
+  #el-record .rc{font-size:54px;color:#ffe066;text-align:center;
+    text-shadow:0 0 22px rgba(255,200,40,.75),0 6px 16px rgba(0,0,0,.8);-webkit-text-stroke:1.5px rgba(0,0,0,.5)}
+  @keyframes recIn{0%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}14%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    80%{opacity:1}100%{opacity:0;transform:translate(-50%,-58%) scale(1.04)}}
+
+  /* 8. EPISODE */
+  #el-episode{right:16px;top:12px;font-family:'Segoe UI',sans-serif;font-size:11.5px;letter-spacing:.14em;color:#93a4bd}
+  #el-episode b{color:#fff;font-family:'Bangers HUD','Bangers',sans-serif;font-size:15px;letter-spacing:.05em}
+
+  /* 9. RUN SUMMARY */
+  #el-summary{left:50%;top:52%;transform:translate(-50%,-50%) scale(.94);opacity:0;width:min(680px,80%)}
+  #el-summary.on{opacity:1;transform:translate(-50%,-50%) scale(1);transition:.4s cubic-bezier(.2,1.1,.3,1)}
+  #el-summary .rs{background:linear-gradient(180deg,rgba(8,10,16,.96),rgba(12,14,22,.96));
+    border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px 24px 18px;box-shadow:0 26px 60px rgba(0,0,0,.7)}
+  #el-summary .rs-top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px}
+  #el-summary .rs-title{font-family:'Bangers HUD','Bangers',sans-serif;font-size:34px;color:#fff}
+  #el-summary .rs-sub{font-family:'Segoe UI',sans-serif;font-size:12px;color:#8b97ab;letter-spacing:.1em}
+  #el-summary .rs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  #el-summary .rs-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:9px 11px}
+  #el-summary .rs-cell span{display:block;font-family:'Segoe UI',sans-serif;font-size:10.5px;letter-spacing:.14em;color:#8b97ab;text-transform:uppercase}
+  #el-summary .rs-cell b{font-family:'Bangers HUD','Bangers',sans-serif;font-size:26px;color:#fff;font-weight:400}
+  #el-summary .rs-cell b.good{color:#68ffa4} #el-summary .rs-cell b.bad{color:#ff6b6b} #el-summary .rs-cell b.gold{color:#ffe066}
+  #el-summary .rs-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;
+    font-family:'Segoe UI',sans-serif;font-size:12px;color:#93a4bd}
+  #el-summary .rs-next{color:#ffb066}
+
+  /* flash */
+  #flash{position:absolute;inset:0;pointer-events:none;opacity:0;background:rgba(255,28,28,.40);z-index:9}
+  #flash.go{animation:fl 460ms ease-out}
+  @keyframes fl{0%{opacity:0}10%{opacity:1}100%{opacity:0}}
+
+  /* ================= BARI I STAGE-IT ================= */
+  #stageBar{flex:none;display:flex;gap:7px;flex-wrap:wrap;padding:9px 12px;background:#0a0d13;border-top:1px solid var(--line)}
+  .btn{background:#1b2231;color:#dce5f2;border:1px solid var(--line);border-radius:8px;padding:7px 11px;font-size:12px;
+    cursor:pointer;font-family:inherit;transition:.15s}
+  .btn:hover{background:#25304a}
+  .btn.acc{background:linear-gradient(#ff9a34,#ff7a12);border-color:#ffb567;color:#180d00;font-weight:700}
+  .btn.on{background:linear-gradient(#2e6b3f,#1f4a2c);border-color:#4ecb71;color:#dfffe8}
+  .btn.danger{background:#4a1220;border-color:#8d2440;color:#ffd8e1}
+  .btn.big{padding:9px 14px;font-size:13px}
+
+  /* ================= PANELI ================= */
+  #panel{width:400px;flex:none;height:100%;overflow-y:auto;background:linear-gradient(#0d1119,#0a0d13);
+    border-left:1px solid var(--line);padding:14px 14px 70px}
+  #panel::-webkit-scrollbar{width:9px}#panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:9px}
+  h1{font-size:15px;margin:0 0 3px;letter-spacing:.02em}
+  .sub{font-size:11px;color:var(--dim);margin-bottom:12px;line-height:1.55}
+  .sec{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px;overflow:hidden}
+  .sec>h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#ffb066;margin:0;padding:9px 11px;
+    background:rgba(255,138,30,.07);border-bottom:1px solid var(--line);cursor:pointer;display:flex;justify-content:space-between}
+  .sec>.body{padding:10px 11px}
+  .sec.collapsed>.body{display:none}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:11px;color:var(--dim);flex:1;min-width:0}
+  .val{font-size:11px;color:#fff;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:#222a38;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--acc);
+    border:2px solid #0a0d13;cursor:pointer}
+  select,input[type=text]{background:#121826;color:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 8px;
+    font-size:12px;font-family:inherit;width:100%}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:12px;color:#c9d5e4;margin:6px 0;cursor:pointer}
+  .chk input{accent-color:#ff8a1e;width:14px;height:14px}
+  .chk b{color:#fff}
+  .note{font-size:10.5px;color:#697689;line-height:1.5;margin-top:6px}
+  .tabs{display:flex;gap:5px;margin-bottom:10px}
+  .tab{flex:1;padding:8px;border-radius:9px;background:#151b28;border:1px solid var(--line);color:#c9d5e4;font-size:12px;
+    cursor:pointer;font-family:inherit}
+  .tab.active{background:linear-gradient(#ff9a34,#ff7a12);color:#180d00;border-color:#ffb567;font-weight:700}
+
+  /* ================= GALERIA ================= */
+  #gallery{display:none;position:absolute;inset:0;overflow-y:auto;background:#070a0f;padding:18px 20px 60px}
+  #gallery.show{display:block}
+  #gallery h2{font-size:16px;margin:0 0 4px}
+  #gallery .gsub{font-size:12px;color:var(--dim);margin-bottom:16px}
+  .gcard{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;background:#0b0e14;
+    padding:12px;margin-bottom:12px}
+  .gcard .gtxt{width:270px;flex:none}
+  .gcard .gtxt h3{margin:0 0 5px;font-size:13.5px}
+  .gcard .gtxt p{margin:0;font-size:11.5px;color:#8b97ab;line-height:1.55}
+  .gcard .gtxt .why{margin-top:7px;font-size:11px;color:#ffb066}
+  .gcard .gtxt .btn{margin-top:9px}
+  .frame{position:relative;flex:1;height:210px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08);
+    background:#0e1218}
+  .frame .game{position:absolute;inset:0}
+  .frame .lane{position:absolute;left:50%;top:60%;bottom:0;width:3px;background:rgba(255,255,255,.14);transform:translateX(-50%)}
+  .frame .inner{position:absolute;inset:0;transform-origin:top left}
+  .gcard.hl{border-color:rgba(255,138,30,.55);box-shadow:0 0 0 1px rgba(255,138,30,.25) inset}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#8b97ab;margin-bottom:14px}
+  .legend span b{color:#fff}
+  @media (max-width:1100px){ body{flex-direction:column} #panel{width:100%;height:46%} #stageWrap{height:54%} }
+</style>
+</head>
+<body>
+
+<div id="stageWrap">
+  <div id="stage">
+    <div class="game"></div>
+    <div class="lane"></div>
+    <div class="car"></div>
+    <div class="tag">Simulim i lojës — jo HUD i vërtetë</div>
+
+    <!-- 8. SERIES BRANDING -->
+    <div class="cm" id="el-episode">EPISODE <b id="epNum">07</b> · RUN <b id="runNum">34</b></div>
+
+    <!-- 1. MISSION CARD -->
+    <div class="cm" id="el-mission">
+      <div class="mm-card">
+        <div class="mm-goal">GOAL: SURVIVE <b id="goalKm">100</b> KM <span id="goalSpeedWrap">@ <b id="goalSpeed">150</b>+ km/h</span></div>
+        <div class="mm-bar"><div class="mm-fill" id="missionFill"></div></div>
+        <div class="mm-row">
+          <span><b id="missionKm">0.0</b> / <span id="goalKm2">100</span> km</span>
+          <span id="missionPct">0%</span>
+          <span id="missionTime">0:00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. LEVEL -->
+    <div class="cm" id="el-level"><div class="lv"><b id="lvlNum">3</b><span id="lvlName">HIGH RISK</span></div></div>
+
+    <!-- SURVIVAL (si në mod) -->
+    <div class="pf-survival" id="sv">
+      <div class="pf-survival-main">
+        <span class="pf-survival-label">SURVIVAL CHANCE</span>
+        <span class="pf-survival-counter">
+          <span class="pf-survival-value" id="svValue">100<i>%</i></span>
+          <span class="pf-survival-delta" id="svDelta" style="display:none"></span>
+        </span>
+      </div>
+      <div class="pf-survival-status-wrap">
+        <div class="pf-survival-status" id="svStatus">STEADY</div>
+      </div>
+      <div class="pf-survival-verdict" id="svVerdict" style="display:none">TOTALED</div>
+    </div>
+
+    <!-- 3. COMBO -->
+    <div class="cm" id="el-combo"><div class="cb" id="comboBox">HIT <b id="comboN">1</b> · x<b id="comboMult">1</b></div></div>
+
+    <!-- 4. STREAK -->
+    <div class="cm" id="el-streak"><div class="st">CLEAN RUN <b id="streakVal">0s</b></div></div>
+
+    <!-- 5. DANGER -->
+    <div class="cm" id="el-danger">
+      <div class="dg">
+        <div class="dg-top"><div class="dg-lab">DANGER</div><div class="dg-val" id="dangerVal">0%</div></div>
+        <div class="dg-bar"><div class="dg-fill" id="dangerFill"></div></div>
+        <div class="dg-count" id="dangerCount">DANGER IN 5</div>
+      </div>
+    </div>
+
+    <!-- 6. ODDS -->
+    <div class="cm" id="el-odds">
+      <div class="od">
+        <div class="od-row"><div class="od-lab">SURVIVAL ODDS</div><div class="od-val" id="oddsVal">95%</div></div>
+        <div class="od-bar"><div class="od-fill" id="oddsFill"></div></div>
+        <div class="od-note" id="oddsNote">shkruaj në komente sa i jep</div>
+      </div>
+    </div>
+
+    <!-- 7. NEW RECORD -->
+    <div class="cm" id="el-record"><div class="rc">★ NEW RECORD ★</div></div>
+
+    <!-- 9. RUN SUMMARY -->
+    <div class="cm" id="el-summary">
+      <div class="rs">
+        <div class="rs-top">
+          <div class="rs-title" id="rsTitle">RUN SUMMARY</div>
+          <div class="rs-sub" id="rsSub">EPISODE 07 · RUN 34</div>
+        </div>
+        <div class="rs-grid">
+          <div class="rs-cell"><span>Distance</span><b id="rsKm">0 km</b></div>
+          <div class="rs-cell"><span>Top speed</span><b id="rsSpeed">0 km/h</b></div>
+          <div class="rs-cell"><span>Time</span><b id="rsTime">0:00</b></div>
+          <div class="rs-cell"><span>Hits taken</span><b id="rsHits">0</b></div>
+          <div class="rs-cell"><span>Lowest chance</span><b class="bad" id="rsLow">100%</b></div>
+          <div class="rs-cell"><span>Close calls</span><b class="gold" id="rsClose">0</b></div>
+        </div>
+        <div class="rs-foot">
+          <div id="rsVerdict">MISSION FAILED</div>
+          <div class="rs-next" id="rsNext">NEXT: 150 KM @ 180 km/h</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="flash"></div>
+  </div>
+
+  <div id="stageBar">
+    <button class="btn danger big" id="bHit">💥 Goditje</button>
+    <button class="btn big" id="bDrive">▶ Nis vozitjen</button>
+    <button class="btn" id="bSafe">✓ Kaloi 5s pa goditje</button>
+    <button class="btn acc" id="bDone">🏁 Mbaro misionin</button>
+    <button class="btn danger" id="bWreck">💀 Shkatërrohu</button>
+    <button class="btn" id="bSummary">🧾 Run Summary</button>
+    <button class="btn" id="bReset">↺ Reset</button>
+    <button class="btn" id="bContent">🎬 CONTENT MODE</button>
+    <button class="btn" id="bGallery">🖼 Galeria (9 ide)</button>
+  </div>
+</div>
+
+<aside id="panel">
+  <h1>Creator Mode Lab — v5.4 ide</h1>
+  <div class="sub">Ndez/fik elementet, simulo vozitje e goditje, edhe shiko si duket në lojë. Presetet lart.</div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="live">LIVE</button>
+    <button class="tab" data-tab="gallery">GALERIA</button>
+  </div>
+
+  <div class="sec">
+    <h2>Presetet <span>▾</span></h2>
+    <div class="body">
+      <div class="grid2">
+        <button class="btn" data-preset="minimal">Minimal</button>
+        <button class="btn on" data-preset="pro">Creator Pro</button>
+        <button class="btn" data-preset="streamer">Streamer Hype</button>
+        <button class="btn" data-preset="cinematic">Cinematic</button>
+      </div>
+      <div class="note" id="presetNote">Creator Pro: mision + level + danger + odds + combo + episode.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Elementet (kliko për me fik/ndez) <span>▾</span></h2>
+    <div class="body">
+      <label class="chk"><input type="checkbox" id="t-mission" checked> <b>1. MISSION CARD</b> + progress bar</label>
+      <label class="chk"><input type="checkbox" id="t-level" checked> <b>2. LEVEL</b> badge</label>
+      <label class="chk"><input type="checkbox" id="t-combo" checked> <b>3. COMBO</b> (hit në 20s · x2)</label>
+      <label class="chk"><input type="checkbox" id="t-streak"> <b>4. CLEAN RUN</b> streak</label>
+      <label class="chk"><input type="checkbox" id="t-danger" checked> <b>5. DANGER METER</b> + countdown</label>
+      <label class="chk"><input type="checkbox" id="t-odds" checked> <b>6. ODDS BAR</b> (prognoza)</label>
+      <label class="chk"><input type="checkbox" id="t-record" checked> <b>7. NEW RECORD</b> banner</label>
+      <label class="chk"><input type="checkbox" id="t-episode" checked> <b>8. EPISODE/RUN</b> branding</label>
+      <label class="chk"><input type="checkbox" id="t-summary" checked> <b>9. RUN SUMMARY</b> (end card)</label>
+      <div class="note">Elementet 1–9 = idetë e mia. Kliko “Galeria” për me i pa një nga një me shpjegim.</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Misioni <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Distanca e misionit</label><input type="range" id="s-goal" min="10" max="300" step="5" value="100"><span class="val" id="v-goal">100 km</span></div>
+      <div class="row"><label>Shpejtësia e kërkuar</label><input type="range" id="s-goalspeed" min="80" max="250" step="10" value="150"><span class="val" id="v-goalspeed">150 km/h</span></div>
+      <div class="row"><label>Shpejtësia jote</label><input type="range" id="s-speed" min="0" max="300" step="5" value="0"><span class="val" id="v-speed">0 km/h</span></div>
+      <div class="row"><label>Rekordi i mëparshëm</label><input type="range" id="s-best" min="5" max="280" step="5" value="60"><span class="val" id="v-best">60 km</span></div>
+      <div class="note">Shpejtësia ndikon në DANGER dhe në mënyrën si mbushet misioni (shpejt = ma shpejt, por ma rrezikshëm).</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Tekstet <span>▾</span></h2>
+    <div class="body">
+      <div class="row"><label>Episode</label><input type="text" id="s-ep" value="07" style="width:90px"></div>
+      <div class="row"><label>Run</label><input type="text" id="s-run" value="34" style="width:90px"></div>
+      <div class="row"><label>Misioni tjetër</label><input type="text" id="s-next" value="150 KM @ 180 km/h"></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Si funksionon <span>▾</span></h2>
+    <div class="body">
+      <div class="note" style="color:#9fb0c8">
+        <b style="color:#fff">1. MISSION</b> — shikuesi e di objektivin në 3 sekondat e para → do me pa a mbarohet.<br><br>
+        <b style="color:#fff">2. LEVEL</b> — eskalim vizual: çdo nivel ndryshon ngjyrën dhe frazat.<br><br>
+        <b style="color:#fff">3. COMBO</b> — ritëm: 3 goditje në 20s = x2. Të shtyn me e kqyr sa herë rritet.<br><br>
+        <b style="color:#fff">4. CLEAN RUN</b> — kohë pa goditje; e bën të duket “e ndershme” e prekshme.<br><br>
+        <b style="color:#fff">5. DANGER</b> — tension: kur kalon pragun, countdown “DANGER IN 5…”.<br><br>
+        <b style="color:#fff">6. ODDS</b> — shkruaj në komente “unë i jap 30%” → engagement → ma shumë rekomandime.<br><br>
+        <b style="color:#fff">7. RECORD</b> — momenti ma i fortë: “NEW RECORD” e bën videon me vlerë.<br><br>
+        <b style="color:#fff">8. EPISODE</b> — serializim → binge watching.<br><br>
+        <b style="color:#fff">9. SUMMARY</b> — end-card gati për thumbnail/title.
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div id="gallery">
+  <h2>9 idetë — një nga një (kliko “Shfaq në LIVE” për me e pa në kontekst)</h2>
+  <div class="gsub">Këto janë mockup-e të njëjta me atë që do të shohësh në lojë. Thuaj cilat t’i mbaj: p.sh. “2, 5, 6, 9”.</div>
+  <div class="legend">
+    <span>Përqindja e mbajtjes: <b>1, 5, 6, 9</b> = ma i forti</span>
+    <span><b>3, 4</b> = ritëm</span>
+    <span><b>2</b> = eskalim</span>
+    <span><b>7, 8</b> = branding</span>
+  </div>
+  <div id="galleryList"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- gjendja ---------- */
+  var S = {
+    mission:true, level:true, combo:true, streak:false, danger:true, odds:true,
+    record:true, episode:true, summary:true,
+    goalKm:100, goalSpeed:150, speed:0, best:60,
+    km:0, chance:100, hits:0, low:100, closeCalls:0,
+    comboCount:0, comboMult:1, lastHit:0, cleanMs:0, t0:Date.now(),
+    driving:false, level:3, done:false, wrecked:false, dangerCount:0, counting:false
+  };
+
+  var LEVELS = [
+    {n:1,name:'WARM UP',color:'#42ff68'}, {n:2,name:'CRUISING',color:'#9dff3f'},
+    {n:3,name:'HIGH RISK',color:'#ffd23f'}, {n:4,name:'NO MERCY',color:'#ff7a2f'},
+    {n:5,name:'DEATH WISH',color:'#ff334d'}
+  ];
+
+  /* ---------- ndihmës ---------- */
+  function fmtTime(ms){
+    var s = Math.floor(ms/1000), m = Math.floor(s/60);
+    return m + ':' + String(s % 60).padStart(2,'0');
+  }
+  function stateOf(v){ return v<=0?'dead':v<=20?'critical':v<=55?'danger':v<=80?'caution':'safe'; }
+  function colorOf(v){ var s=stateOf(v);
+    return {safe:'#42ff68',caution:'#ffd23f',danger:'#ff7a2f',critical:'#ff334d',dead:'#b3122b'}[s]; }
+  function phraseOf(v){ var s=stateOf(v);
+    return {safe:'STEADY',caution:'CAREFUL',danger:'DANGER',critical:'CRITICAL',dead:'TOTALED'}[s]; }
+
+  /* ---------- rendi ---------- */
+  function applyToggles(){
+    ['mission','level','combo','streak','danger','odds','episode'].forEach(function(k){
+      var el = $('el-' + k); if (!el) return;
+      el.classList.toggle('on', !!S[k]);
+    });
+    // record + summary shfaqen vetëm kur ndodhin (jo gjatë gjithë kohës)
+    var box; ['record','summary'].forEach(function(k){
+      box = $('t-' + k); if (box) box.checked = !!S[k];
+    });
+    if (!S.summary) $('el-summary').classList.remove('on');
+  }
+
+  function render(){
+    // survival
+    var col = colorOf(S.chance);
+    var sv = $('sv');
+    sv.style.color = col;
+    $('svValue').innerHTML = Math.round(S.chance) + '<i>%</i>';
+    $('svStatus').textContent = phraseOf(S.chance);
+    $('svVerdict').style.display = S.wrecked ? '' : 'none';
+
+    // mission
+    var pct = Math.max(0, Math.min(100, S.km / S.goalKm * 100));
+    $('missionFill').style.width = pct + '%';
+    $('missionKm').textContent = S.km.toFixed(1);
+    $('goalKm').textContent = S.goalKm; $('goalKm2').textContent = S.goalKm;
+    $('goalSpeed').textContent = S.goalSpeed;
+    $('goalSpeedWrap').style.display = S.goalSpeed > 80 ? '' : 'none';
+    $('missionPct').textContent = Math.round(pct) + '%';
+    $('missionTime').textContent = fmtTime(Date.now() - S.t0);
+
+    // level
+    var lv = LEVELS[S.level-1];
+    $('lvlNum').textContent = lv.n; $('lvlName').textContent = lv.name;
+    document.querySelector('#el-level .lv').style.background =
+      'linear-gradient(180deg,' + lv.color + ',rgba(0,0,0,.35))';
+
+    // combo
+    $('comboN').textContent = S.comboCount;
+    $('comboMult').textContent = S.comboMult;
+
+    // streak
+    $('streakVal').textContent = Math.floor(S.cleanMs/1000) + 's';
+
+    // danger
+    var speedRisk = Math.max(0, (S.speed - S.goalSpeed) / Math.max(40, S.goalSpeed) * 0.55);
+    var dmgRisk = (100 - S.chance) / 100 * 0.60;
+    var danger = Math.max(0, Math.min(1, speedRisk + dmgRisk));
+    $('dangerFill').style.width = (danger*100).toFixed(0) + '%';
+    $('dangerVal').textContent = Math.round(danger*100) + '%';
+    var crit = danger > 0.78;
+    $('el-danger').classList.toggle('critical', crit && S.danger);
+    if (crit && !S.counting && S.danger){ startCountdown(); }
+
+    // odds
+    var odds = Math.max(3, Math.min(97, S.chance * 0.92 - S.hits * 1.5 + (S.speed >= S.goalSpeed ? 6 : -8)));
+    $('oddsFill').style.width = odds.toFixed(0) + '%';
+    $('oddsVal').textContent = Math.round(odds) + '%';
+
+    // speed readout
+    $('v-speed').textContent = Math.round(S.speed) + ' km/h';
+  }
+
+  /* ---------- countdown ---------- */
+  function startCountdown(){
+    S.counting = true; S.dangerCount = 5;
+    var el = $('dangerCount');
+    function tick(){
+      if (!S.danger || S.wrecked){ S.counting = false; return; }
+      el.textContent = S.dangerCount > 0 ? ('DANGER IN ' + S.dangerCount) : 'CRASH!';
+      if (S.dangerCount <= 0){ S.counting = false; hit(30); return; }
+      S.dangerCount--;
+      setTimeout(tick, 700);
+    }
+    tick();
+  }
+
+  /* ---------- veprimet ---------- */
+  function hit(amount){
+    if (S.wrecked) return;
+    amount = amount || (9 + Math.random() * 22);
+    var old = S.chance;
+    S.chance = Math.max(0, S.chance - amount);
+    S.hits++;
+    S.low = Math.min(S.low, S.chance);
+    S.cleanMs = 0;
+    var now = Date.now();
+    if (now - S.lastHit < 20000){ S.comboCount++; S.comboMult = 1 + Math.floor(S.comboCount/3); }
+    else { S.comboCount = 1; S.comboMult = 1; }
+    S.lastHit = now;
+    var cb = $('comboBox'); cb.classList.remove('pop'); void cb.offsetWidth; cb.classList.add('pop');
+
+    var d = $('svDelta');
+    d.style.display = ''; d.textContent = '-' + Math.round(amount) + '%';
+    clearTimeout(d._t); d._t = setTimeout(function(){ d.style.display = 'none'; }, 1200);
+
+    var f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+
+    if (S.chance <= 0) wreck();
+    if (S.chance <= 10 && old > 10) { S.closeCalls++; }
+    render();
+  }
+
+  function wreck(){
+    S.wrecked = true; S.driving = false;
+    $('bDrive').textContent = '▶ Nis vozitjen';
+    showSummary('WRECKED');
+  }
+
+  function showSummary(title){
+    $('rsKm').textContent = S.km.toFixed(1) + ' km';
+    $('rsSpeed').textContent = Math.round(S.maxSpeed || S.speed) + ' km/h';
+    $('rsTime').textContent = fmtTime(Date.now() - S.t0);
+    $('rsHits').textContent = S.hits;
+    $('rsLow').textContent = Math.round(S.low) + '%';
+    $('rsClose').textContent = S.closeCalls;
+    $('rsTitle').textContent = title || (S.wrecked ? 'WRECKED' : 'RUN SUMMARY');
+    $('rsVerdict').textContent = S.km >= S.goalKm ? 'MISSION COMPLETE ✓' : 'MISSION FAILED';
+    $('rsVerdict').style.color = S.km >= S.goalKm ? '#68ffa4' : '#ff6b6b';
+    $('el-summary').classList.add('on');
+    render();
+  }
+
+  /* ---------- loop-i ---------- */
+  setInterval(function(){
+    if (S.driving && !S.wrecked){
+      var dt = 0.12; // sekonda
+      S.speed = Math.min(300, S.speed + Math.max(2, (S.goalSpeed + 30 - S.speed) * 0.25));
+      S.speed = Math.round(S.speed);
+      S.km += S.speed / 3600 * 60 * dt;      // km (shpejtesi ~ km/h -> në minutë të simuluar)
+      S.maxSpeed = Math.max(S.maxSpeed || 0, S.speed);
+      S.cleanMs += dt * 1000;
+      if (S.km > S.best && !S._recShown && S.best > 5){
+        S._recShown = true;
+        var r = $('el-record');
+        if (S.record){ r.classList.remove('on'); void r.offsetWidth; r.classList.add('on'); }
+      }
+      if (S.km >= S.goalKm && !S.done){
+        S.done = true; S.driving = false;
+        $('bDrive').textContent = '▶ Nis vozitjen';
+        showSummary('MISSION COMPLETE');
+      }
+    } else if (!S.driving){
+      S.speed = Math.max(0, S.speed - 4);
+    }
+    S.level = Math.max(1, Math.min(5, 1 + Math.floor((100 - S.chance) / 22)));
+    render();
+  }, 120);
+
+  /* ---------- toggles ---------- */
+  ['mission','level','combo','streak','danger','odds','record','episode','summary'].forEach(function(k){
+    var box = $('t-' + k);
+    box.addEventListener('change', function(){ S[k] = box.checked; applyToggles(); render(); });
+  });
+
+  /* ---------- sliders ---------- */
+  function bind(id, key, fmt){
+    var el = $(id);
+    el.addEventListener('input', function(){
+      S[key] = parseFloat(el.value);
+      if (fmt) $(id.replace('s-','v-')).textContent = fmt(S[key]);
+      render();
+    });
+  }
+  bind('s-goal','goalKm', function(v){ return v + ' km'; });
+  bind('s-goalspeed','goalSpeed', function(v){ return v + ' km/h'; });
+  bind('s-speed','speed', function(v){ return v + ' km/h'; });
+  bind('s-best','best', function(v){ return v + ' km'; });
+
+  $('s-ep').addEventListener('input', function(){ $('epNum').textContent = this.value; $('rsSub').textContent = 'EPISODE ' + this.value + ' · RUN ' + $('s-run').value; });
+  $('s-run').addEventListener('input', function(){ $('runNum').textContent = this.value; $('rsSub').textContent = 'EPISODE ' + $('s-ep').value + ' · RUN ' + this.value; });
+  $('s-next').addEventListener('input', function(){ $('rsNext').textContent = 'NEXT: ' + this.value; });
+
+  /* ---------- butonat e stage-it ---------- */
+  $('bHit').addEventListener('click', function(){ hit(); });
+  $('bDrive').addEventListener('click', function(){
+    if (S.wrecked) return;
+    S.driving = !S.driving;
+    this.textContent = S.driving ? '⏸ Ndal vozitjen' : '▶ Nis vozitjen';
+  });
+  $('bSafe').addEventListener('click', function(){ S.cleanMs += 5000; render(); });
+  $('bDone').addEventListener('click', function(){ S.km = S.goalKm; S.done = true; S.driving = false; showSummary('MISSION COMPLETE'); });
+  $('bWreck').addEventListener('click', function(){ S.chance = 0; wreck(); });
+  $('bSummary').addEventListener('click', function(){
+    S.km = Math.max(S.km, 42.7); S.hits = Math.max(S.hits, 5); S.low = Math.min(S.low, 9); S.closeCalls = Math.max(S.closeCalls, 2);
+    showSummary('RUN SUMMARY');
+  });
+  $('bReset').addEventListener('click', function(){ location.reload(); });
+  $('bContent').addEventListener('click', function(){
+    document.body.classList.toggle('content');
+    var on = document.body.classList.contains('content');
+    $('panel').style.display = on ? 'none' : '';
+    $('bGallery').style.display = on ? 'none' : '';
+    document.querySelector('.tag').style.display = on ? 'none' : '';
+  });
+  $('bGallery').addEventListener('click', function(){ setTab('gallery'); });
+
+  /* ---------- presetet ---------- */
+  var PRESETS = {
+    minimal:   {mission:true, level:false, combo:false, streak:false, danger:false, odds:false, record:false, episode:false},
+    pro:       {mission:true, level:true,  combo:true,  streak:false, danger:true,  odds:true,  record:true,  episode:true},
+    streamer:  {mission:true, level:true,  combo:true,  streak:true,  danger:true,  odds:true,  record:true,  episode:true},
+    cinematic: {mission:true, level:true,  combo:false, streak:false, danger:false, odds:true,  record:true,  episode:true}
+  };
+  var PNOTES = {
+    minimal:'Minimal: vetëm misioni + survival — ma i pastri për shorts.',
+    pro:'Creator Pro: mision + level + danger + odds + combo + episode.',
+    streamer:'Streamer Hype: gjithçka, përfshirë clean-run streak.',
+    cinematic:'Cinematic: mision + level + odds + episode, pa combo/danger — ma “film”.'
+  };
+  [].forEach.call(document.querySelectorAll('[data-preset]'), function(b){
+    b.addEventListener('click', function(){
+      var p = PRESETS[b.dataset.preset]; if (!p) return;
+      Object.assign(S, p);
+      [].forEach.call(document.querySelectorAll('[data-preset]'), function(x){ x.classList.toggle('on', x === b); });
+      $('presetNote').textContent = PNOTES[b.dataset.preset];
+      applyToggles(); render();
+    });
+  });
+
+  /* ---------- tabs + galeria ---------- */
+  function setTab(name){
+    [].forEach.call(document.querySelectorAll('.tab'), function(t){ t.classList.toggle('active', t.dataset.tab === name); });
+    $('gallery').classList.toggle('show', name === 'gallery');
+    $('stageWrap').style.display = name === 'gallery' ? 'none' : '';
+    $('panel').style.display = name === 'gallery' ? 'none' : '';
+  }
+  [].forEach.call(document.querySelectorAll('.tab'), function(t){
+    t.addEventListener('click', function(){ setTab(t.dataset.tab); });
+  });
+
+  /* ---------- galeria: 9 mockup-e ---------- */
+  var IDEAS = [
+    {id:'mission', n:1, title:'MISSION CARD + PROGRESS', why:'Efekti ma i madh: objektivi + progres → shikuesi do me pa a mbarohet.', key:'mission'},
+    {id:'level',   n:2, title:'LEVEL / ESKALIM',         why:'5 nivele, çdo një ndryshon ngjyrën e badge-it dhe frazat.', key:'level'},
+    {id:'combo',   n:3, title:'COMBO & STREAK',          why:'Ritëm: 3 goditje në 20s = x2, si në lojërat arcade.', key:'combo'},
+    {id:'streak',  n:4, title:'CLEAN RUN',               why:'Kohë pa goditje — e bën videon “të ndershme” e të matshme.', key:'streak'},
+    {id:'danger',  n:5, title:'DANGER METER + COUNTDOWN',why:'Tension i vërtetë: “DANGER IN 5… 4… 3…” para përplasjes.', key:'danger'},
+    {id:'odds',    n:6, title:'ODDS BAR (prognoza)',      why:'I shtyn njerëzit me shkru në komente “unë i jap 30%”.', key:'odds'},
+    {id:'record',  n:7, title:'NEW RECORD',              why:'Momenti ma i fortë për klip: rekordi i ri.', key:'record'},
+    {id:'episode', n:8, title:'EPISODE / RUN branding',  why:'Serializim → njerzit ndjekin episod pas episodi.', key:'episode'},
+    {id:'summary', n:9, title:'RUN SUMMARY (end card)',  why:'Kartelë e gatshme për fund-video, thumbnail e titull.', key:'summary'}
+  ];
+
+  var BUILD = {
+    mission: function(){ return '<div style="width:520px;margin:26px auto 0">' + $('el-mission').innerHTML + '</div>'; },
+    level:   function(){ return '<div style="position:absolute;left:20px;top:70px">' + $('el-level').innerHTML + '</div>'; },
+    combo:   function(){ return '<div style="position:absolute;right:20px;top:70px">' + $('el-combo').innerHTML + '</div>'; },
+    streak:  function(){ return '<div style="position:absolute;left:20px;bottom:24px">' + $('el-streak').innerHTML + '</div>'; },
+    danger:  function(){ return '<div style="position:absolute;left:20px;bottom:84px;width:236px">' + $('el-danger').innerHTML + '</div>'; },
+    odds:    function(){ return '<div style="position:absolute;right:20px;bottom:24px;width:250px">' + $('el-odds').innerHTML + '</div>'; },
+    record:  function(){ return '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">' + $('el-record').innerHTML + '</div>'; },
+    episode: function(){ return '<div style="position:absolute;right:20px;top:14px;font-family:\'Segoe UI\',sans-serif;font-size:11.5px;letter-spacing:.14em;color:#93a4bd">EPISODE <b>07</b> · RUN <b>34</b></div>'; },
+    summary: function(){ return '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:600px;transform:scale(.62)">' + $('el-summary').innerHTML + '</div></div>'; }
+  };
+
+  function buildGallery(){
+    var host = $('galleryList');
+    host.innerHTML = '';
+    IDEAS.forEach(function(idea){
+      var card = document.createElement('div');
+      card.className = 'gcard';
+      card.innerHTML =
+        '<div class="gtxt"><h3>' + idea.n + '. ' + idea.title + '</h3>' +
+        '<p>' + idea.why + '</p>' +
+        '<div class="why">Elementi #' + idea.n + '</div>' +
+        '<button class="btn acc" data-show="' + idea.key + '">Shfaq në LIVE</button></div>' +
+        '<div class="frame"><div class="game"></div><div class="lane"></div>' +
+        '<div class="inner">' + (BUILD[idea.key] ? BUILD[idea.key]() : '') + '</div></div>';
+      host.appendChild(card);
+      card.querySelector('[data-show]').addEventListener('click', function(){
+        S[idea.key] = true;
+        var box = $('t-' + idea.key); if (box) box.checked = true;
+        applyToggles(); setTab('live');
+        if (idea.key === 'summary') showSummary('RUN SUMMARY');
+        if (idea.key === 'record') { var r = $('el-record'); r.classList.remove('on'); void r.offsetWidth; r.classList.add('on'); }
+        render();
+      });
+    });
+  }
+
+  /* ---------- start ---------- */
+  applyToggles();
+  buildGallery();
+  render();
+})();
+</script>
+</body>
+</html>
